@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Presupuestador Espacio HIFU - Pro</title>
+    <style>
+        :root { --primary: #795548; --bg: #f5f1e3; --text: #5a3825; --white: #ffffff; --accent: #2196F3; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; }
+        .container { max-width: 900px; margin: auto; background: var(--white); padding: 25px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        h1, h2 { color: var(--primary); text-align: center; }
+        .verificador { background: #e3f2fd; padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #bbdefb; }
+        section { border: 1px solid #ddd; padding: 15px; border-radius: 10px; margin-bottom: 20px; background: #fffcf5; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 10px; }
+        label { display: block; padding: 8px; border-bottom: 1px solid #eee; cursor: pointer; transition: 0.2s; }
+        label:hover { background: #fdf8f0; }
+        .badge { background: var(--primary); color: white; padding: 2px 8px; border-radius: 10px; font-size: 0.8em; }
+        .precio-old { text-decoration: line-through; color: #999; font-size: 0.9em; margin-right: 5px; }
+        .footer-nav { position: sticky; bottom: 0; background: rgba(245,241,227,0.95); padding: 15px; border-radius: 10px; display: flex; gap: 10px; justify-content: center; }
+        button { padding: 12px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        .btn-calc { background: var(--primary); color: white; }
+        .btn-ws { background: #25d366; color: white; display: none; }
+        input[type="number"] { width: 50px; float: right; }
+        .mode-selector { text-align: center; margin-bottom: 15px; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Espacio HIFU</h1>
+
+    <div class="verificador">
+        <label style="border:none;">📱 Teléfono del Cliente:</label>
+        <div style="display:flex; gap:10px;">
+            <input type="text" id="busquedaCliente" placeholder="Ej: 099123456" style="flex:1; padding:10px; border-radius:5px; border:1px solid #ccc;">
+            <button type="button" onclick="verificarCliente()" style="background: var(--accent); color:white;">Verificar</button>
+        </div>
+        <p id="statusCliente" style="margin: 10px 0 0; font-weight: bold;"></p>
+    </div>
+
+    <div class="mode-selector">
+        Tipo de Venta: 
+        <select id="tipoVenta" onchange="calcular()" style="padding:5px; border-radius:5px;">
+            <option value="pack">Pack / Tratamiento Completo</option>
+            <option value="unica">Sesión Individual (Precio x2 prorrateado)</option>
+        </select>
+    </div>
+
+    <form id="formPresupuesto">
+        <section>
+            <h2>HIFU (Rostro y Cuerpo)</h2>
+            <div class="grid" id="lista-hifu">
+                <label><input type="checkbox" data-id="hifu_zona" data-name="HIFU 1 Zona"> 1 Zona (Abdomen/Glúteos/etc) <span class="price-tag"></span></label>
+                <label><input type="checkbox" data-id="hifu_papada" data-name="HIFU Papada"> Papada <span class="price-tag"></span></label>
+                <label><input type="checkbox" data-id="hifu_facial" data-name="HIFU Facial Completo"> Facial Completo <span class="price-tag"></span></label>
+                <label><input type="checkbox" data-id="hifu_4_zonas" data-name="Combo HIFU 4 Zonas"> 🌟 Combo 4 Zonas <span class="price-tag"></span></label>
+                <label><input type="checkbox" data-id="hifu_cuerpo" data-name="HIFU Cuerpo Completo"> 🌟 Cuerpo Completo (8z) <span class="price-tag"></span></label>
+            </div>
+        </section>
+
+        <section>
+            <h2>Corporales y Faciales</h2>
+            <div class="grid">
+                <label><input type="checkbox" data-id="fraccionada" data-name="RF Fraccionada"> Fraccionada (1 ses) <span class="price-tag"></span></label>
+                <label><input type="checkbox" data-id="body" data-name="BodySculpt (8 ses)"> BodySculpt (8 ses) <span class="price-tag"></span></label>
+                <label><input type="checkbox" data-id="lipolaser" data-name="Lipoláser (8 ses)"> Lipoláser (8 ses) <span class="price-tag"></span></label>
+                <label><input type="checkbox" data-id="preso" data-name="Presoterapia (6 ses)"> Presoterapia (6 ses) <span class="price-tag"></span></label>
+                <label><input type="checkbox" data-id="exilis" data-name="Exilis (4 ses)"> Exilis (4 ses) <span class="price-tag"></span></label>
+                <label><input type="checkbox" data-id="limpieza" data-name="Limpieza Facial"> Limpieza Facial <span class="price-tag"></span></label>
+            </div>
+        </section>
+
+        <section>
+            <h2>Depilación Láser (Pack x6)</h2>
+            <div class="grid">
+                <div>Zona Grande <input type="number" data-id="depi_grande" data-name="Depi Grande" min="0" value="0" onchange="calcular()"></div>
+                <div>Zona Mediana <input type="number" data-id="depi_mediana" data-name="Depi Mediana" min="0" value="0" onchange="calcular()"></div>
+                <div>Zona Chica <input type="number" data-id="depi_chica" data-name="Depi Chica" min="0" value="0" onchange="calcular()"></div>
+            </div>
+            <p style="font-size:0.8em; color:#666;">*Combo: 4 chicas o (2 chicas + 1 mediana) = Precio 1 Grande</p>
+        </section>
+
+        <section>
+            <h2>Packs Especiales</h2>
+            <label><input type="checkbox" data-id="ultimatum" data-name="Pack Ultimátum Nuevo"> Pack Ultimátum (HIFU+Lipo+Vibra) <span class="price-tag"></span></label>
+            <label><input type="checkbox" data-id="lifting_premium" data-name="Lifting Facial Premium"> Lifting Premium (Exilis+HIFU) <span class="price-tag"></span></label>
+        </section>
+    </form>
+
+    <div id="resultado" style="display:none; padding:15px; border-top: 2px solid var(--primary);"></div>
+
+    <div class="footer-nav">
+        <button onclick="calcular()" class="btn-calc">CALCULAR TOTAL</button>
+        <button id="btnWs" onclick="enviarWS()" class="btn-ws">ENVIAR WHATSAPP</button>
+        <button onclick="location.reload()" style="background:#eee;">REINICIAR</button>
+    </div>
+</div>
+
+<script>
+    let esViejo = false;
+    let nombreCliente = "Cliente";
+    const URL_N8N = 'https://n8n.srv1043651.hstgr.cloud/webhook-test/verificador-cliente';
+
+    const PRECIOS = {
+        hifu_zona: { nuevo: 15900, viejo: 15900, ses: 1 },
+        hifu_papada: { nuevo: 5900, viejo: 5900, ses: 1 },
+        hifu_facial: { nuevo: 12900, viejo: 10900, ses: 1 },
+        hifu_4_zonas: { nuevo: 41900, viejo: 41900, ses: 1 },
+        hifu_cuerpo: { nuevo: 71900, viejo: 71900, ses: 1 },
+        fraccionada: { nuevo: 11900, viejo: 6900, ses: 1 },
+        body: { nuevo: 16500, viejo: 9900, ses: 8 },
+        lipolaser: { nuevo: 18900, viejo: 15900, ses: 8 },
+        preso: { nuevo: 9900, viejo: 9900, ses: 6 },
+        exilis: { nuevo: 18900, viejo: 12900, ses: 4 },
+        limpieza: { nuevo: 2750, viejo: 2750, ses: 1 },
+        depi_grande: { nuevo: 16900, viejo: 16900, ses: 6 },
+        depi_mediana: { nuevo: 11900, viejo: 8900, ses: 6 },
+        depi_chica: { nuevo: 9900, viejo: 4900, ses: 6 },
+        ultimatum: { nuevo: 29900, viejo: 29900, ses: 1 },
+        lifting_premium: { nuevo: 26900, viejo: 26900, ses: 1 }
+    };
+
+    async function verificarCliente() {
+        const tel = document.getElementById('busquedaCliente').value;
+        const status = document.getElementById('statusCliente');
+        status.innerText = "⏳ Verificando...";
+
+        try {
+            const resp = await fetch(`${URL_N8N}?dato=${tel}`);
+            const data = await resp.json();
+            if(data.esCliente) {
+                esViejo = true;
+                nombreCliente = data.nombre;
+                status.innerHTML = `✅ ¡Hola ${data.nombre}! Paciente Antiguo detectado. Precios especiales aplicados.`;
+                status.style.color = "green";
+            } else {
+                esViejo = false;
+                status.innerText = "❌ Paciente Nuevo. Se aplicarán precios de lista.";
+                status.style.color = "red";
+            }
+            calcular();
+        } catch (e) {
+            status.innerText = "⚠️ Error de conexión con n8n.";
+        }
+    }
+
+    function calcular() {
+        let total = 0;
+        let items = [];
+        const modo = document.getElementById('tipoVenta').value;
+        const boxes = document.querySelectorAll('input[type=checkbox], input[type=number]');
+        
+        // Actualizar visual de precios en etiquetas
+        document.querySelectorAll('.price-tag').forEach(tag => {
+            const id = tag.parentElement.querySelector('input').dataset.id;
+            let p = esViejo ? PRECIOS[id].viejo : PRECIOS[id].nuevo;
+            if(modo === 'unica') p = (p / PRECIOS[id].ses) * 2;
+            tag.innerHTML = `<b style="color:var(--primary)">$${Math.round(p).toLocaleString()}</b>`;
+        });
+
+        let hifuCount = 0;
+        let tratsParaDesc = [];
+
+        boxes.forEach(el => {
+            const id = el.dataset.id;
+            let p = esViejo ? PRECIOS[id].viejo : PRECIOS[id].nuevo;
+            if(modo === 'unica') p = (p / PRECIOS[id].ses) * 2;
+
+            if(el.type === 'checkbox' && el.checked) {
+                total += p;
+                items.push(`${el.dataset.name}: $${Math.round(p).toLocaleString()}`);
+                if(id.startsWith('hifu')) hifuCount++;
+                else tratsParaDesc.push({ name: el.dataset.name, price: p });
+            } 
+            else if(el.type === 'number' && el.value > 0) {
+                // Lógica de Depi Combo (simplificada para el total)
+                let sub = p * el.value;
+                total += sub;
+                items.push(`${el.dataset.name} x${el.value}: $${Math.round(sub).toLocaleString()}`);
+            }
+        });
+
+        // REGLAS DE DESCUENTO (Solo para Pacientes Nuevos)
+        let descuentoTotal = 0;
+        if(!esViejo) {
+            // Descuento Combinación (2do -20%, 3er -30%...)
+            tratsParaDesc.sort((a,b) => b.price - a.price); // De mayor a menor
+            for(let i = 1; i < tratsParaDesc.length; i++) {
+                let pct = (i + 1) * 0.1; 
+                if(pct > 0.5) pct = 0.5; // Cap al 50%
+                descuentoTotal += tratsParaDesc[i].price * pct;
+            }
+        }
+
+        const totalFinal = total - descuentoTotal;
+        const resDiv = document.getElementById('resultado');
+        resDiv.style.display = "block";
+        resDiv.innerHTML = `
+            <h3>Resumen para ${nombreCliente}</h3>
+            <ul><li>${items.join('</li><li>')}</li></ul>
+            <p>Subtotal: $${Math.round(total).toLocaleString()}</p>
+            ${descuentoTotal > 0 ? `<p style="color:green">Descuento por combinación: -$${Math.round(descuentoTotal).toLocaleString()}</p>` : ''}
+            <h2 style="margin-top:10px;">TOTAL: $${Math.round(totalFinal).toLocaleString()}</h2>
+            <p><b>12 cuotas de: $${Math.round(totalFinal/12).toLocaleString()}</b></p>
+        `;
+
+        window.mensajeWS = `Hola ${nombreCliente}! Soy de Espacio HIFU. Te paso el presupuesto:%0A%0A${items.join('%0A')}%0A%0A*TOTAL: $${Math.round(totalFinal).toLocaleString()}*%0AO 12 cuotas de $${Math.round(totalFinal/12).toLocaleString()}`;
+        document.getElementById('btnWs').style.display = "block";
+    }
+
+    function enviarWS() {
+        window.open(`https://wa.me/?text=${window.mensajeWS}`, '_blank');
+    }
+</script>
+
+</body>
+</html>
