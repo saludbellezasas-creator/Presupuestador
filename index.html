@@ -121,15 +121,20 @@
     };
 
 async function verificarCliente() {
-    const dato = document.getElementById('busquedaCliente').value.trim(); // .trim() quita espacios extra
+    const input = document.getElementById('busquedaCliente').value.trim();
     const status = document.getElementById('statusCliente');
-    if(!dato) return; // Si está vacío no hace nada
+    if(!input) return;
 
     status.innerText = "🔍 Buscando por nombre o teléfono...";
     status.style.color = "black";
 
+    // Si tiene números, limpiamos símbolos (+, -, espacios) 
+    // Si no tiene números, es un nombre y lo enviamos tal cual
+    const datoLimpio = /\d/.test(input) ? input.replace(/[^0-9]/g, '') : input;
+
     try {
-        const resp = await fetch(`${URL_N8N}?dato=${encodeURIComponent(dato)}`);
+        // Usamos encodeURIComponent para que los nombres con espacios no rompan la URL
+        const resp = await fetch(`${URL_N8N}?dato=${encodeURIComponent(datoLimpio)}`);
         const data = await resp.json();
         
         if(data.esCliente) {
@@ -142,7 +147,7 @@ async function verificarCliente() {
             status.innerText = "❌ No encontrado. Se aplicarán precios de Paciente Nuevo.";
             status.style.color = "red";
         }
-        calcular(); // Recalcula todo con los nuevos precios
+        calcular(); // Recalcula los precios en la pantalla automáticamente
     } catch (e) {
         status.innerText = "⚠️ Error de conexión. Revisa que n8n esté en 'Active'.";
         console.error(e);
