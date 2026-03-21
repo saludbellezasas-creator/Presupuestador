@@ -121,54 +121,33 @@
     };
 
 async function verificarCliente() {
-        const input = document.getElementById('busquedaCliente').value.trim();
-        const status = document.getElementById('statusCliente');
-        if(!input) return;
+    const dato = document.getElementById('busquedaCliente').value.trim(); // .trim() quita espacios extra
+    const status = document.getElementById('statusCliente');
+    if(!dato) return; // Si está vacío no hace nada
 
-        status.innerText = "🔍 Buscando por nombre o teléfono...";
-        status.style.color = "black";
+    status.innerText = "🔍 Buscando por nombre o teléfono...";
+    status.style.color = "black";
 
-        // Si tiene números, limpiamos símbolos (+, -, espacios) para que n8n busque fácil
-        // Si no tiene números, enviamos el nombre tal cual
-        const datoLimpio = /\d/.test(input) ? input.replace(/[^0-9]/g, '') : input;
-
-        try {
-            const resp = await fetch(`${URL_N8N}?dato=${encodeURIComponent(datoLimpio)}`);
-            const data = await resp.json();
-            
-            if(data.esCliente) {
-                esViejo = true;
-                nombreCliente = data.nombre;
-                status.innerHTML = `✅ ¡Identificado! Hola, <b>${data.nombre}</b>. Aplicando precios de Paciente Antiguo.`;
-                status.style.color = "green";
-            } else {
-                esViejo = false;
-                status.innerText = "❌ No encontrado. Se aplicarán precios de Paciente Nuevo.";
-                status.style.color = "red";
-            }
-            calcular(); // Recalcula los precios en la pantalla
-        } catch (e) {
-            status.innerText = "⚠️ Error de conexión. Revisa que n8n esté en 'Active'.";
-            console.error(e);
+    try {
+        const resp = await fetch(`${URL_N8N}?dato=${encodeURIComponent(dato)}`);
+        const data = await resp.json();
+        
+        if(data.esCliente) {
+            esViejo = true;
+            nombreCliente = data.nombre;
+            status.innerHTML = `✅ ¡Identificado! Hola, <b>${data.nombre}</b>. Aplicando precios de Paciente Antiguo.`;
+            status.style.color = "green";
+        } else {
+            esViejo = false;
+            status.innerText = "❌ No encontrado. Se aplicarán precios de Paciente Nuevo.";
+            status.style.color = "red";
         }
-    } // <-- Asegúrate de que termine aquí con esta llave            const resp = await fetch(`${URL_N8N}?dato=${tel}`);
-            const data = await resp.json();
-            if(data.esCliente) {
-                esViejo = true;
-                nombreCliente = data.nombre;
-                status.innerHTML = `✅ ¡Hola ${data.nombre}! Paciente Antiguo detectado. Precios especiales aplicados.`;
-                status.style.color = "green";
-            } else {
-                esViejo = false;
-                status.innerText = "❌ Paciente Nuevo. Se aplicarán precios de lista.";
-                status.style.color = "red";
-            }
-            calcular();
-        } catch (e) {
-            status.innerText = "⚠️ Error de conexión con n8n.";
-        }
+        calcular(); // Recalcula todo con los nuevos precios
+    } catch (e) {
+        status.innerText = "⚠️ Error de conexión. Revisa que n8n esté en 'Active'.";
+        console.error(e);
     }
-
+}
     function calcular() {
         let total = 0;
         let items = [];
