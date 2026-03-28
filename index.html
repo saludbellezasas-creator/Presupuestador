@@ -3,25 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Presupuestador Espacio HIFU - Pro</title>
+    <title>Presupuestador Espacio HIFU - Pro v2</title>
     <style>
         :root { --primary: #795548; --bg: #f5f1e3; --text: #5a3825; --white: #ffffff; --accent: #2196F3; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; }
-        .container { max-width: 900px; margin: auto; background: var(--white); padding: 25px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
-        h1, h2 { color: var(--primary); text-align: center; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 10px; padding-bottom: 80px; }
+        .container { max-width: 900px; margin: auto; background: var(--white); padding: 20px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        h1, h2 { color: var(--primary); text-align: center; margin-top: 25px; border-bottom: 2px solid #eee; padding-bottom: 5px; }
         .verificador { background: #e3f2fd; padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #bbdefb; }
         section { border: 1px solid #ddd; padding: 15px; border-radius: 10px; margin-bottom: 20px; background: #fffcf5; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 10px; }
-        label { display: block; padding: 8px; border-bottom: 1px solid #eee; cursor: pointer; transition: 0.2s; }
-        label:hover { background: #fdf8f0; }
-        .price-tag { float: right; font-weight: bold; color: var(--primary); }
-        .footer-nav { position: sticky; bottom: 0; background: rgba(245,241,227,0.95); padding: 15px; border-radius: 10px; display: flex; gap: 10px; justify-content: center; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; }
+        .item-row { display: flex; justify-content: space-between; align-items: center; padding: 8px; border-bottom: 1px solid #eee; transition: 0.2s; }
+        .item-row:hover { background: #fdf8f0; }
+        .price-tag { font-weight: bold; color: var(--primary); margin-left: auto; margin-right: 10px; }
+        input[type="number"] { width: 50px; padding: 5px; border-radius: 5px; border: 1px solid #ccc; text-align: center; }
+        .footer-nav { position: fixed; bottom: 0; left: 0; right: 0; background: white; padding: 15px; border-top: 2px solid var(--primary); display: flex; gap: 10px; justify-content: center; z-index: 1000; }
         button { padding: 12px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
         .btn-calc { background: var(--primary); color: white; }
         .btn-ws { background: #25d366; color: white; display: none; }
-        input[type="number"] { width: 50px; float: right; }
-        .mode-selector { text-align: center; margin-bottom: 15px; font-weight: bold; }
-        .desc-info { color: #2e7d32; font-size: 0.9em; margin-top: 5px; }
+        .mode-selector { text-align: center; margin-bottom: 15px; font-weight: bold; background: #f9f9f9; padding: 10px; border-radius: 8px; }
+        select { padding: 8px; border-radius: 5px; border: 1px solid #ccc; }
     </style>
 </head>
 <body>
@@ -29,11 +29,10 @@
 <div class="container">
     <h1>Espacio HIFU</h1>
 
-    <!-- Verificador de Cliente -->
     <div class="verificador">
-        <label style="border:none;">🔍 Buscar Cliente (Nombre o Celular):</label>
-        <div style="display:flex; gap:10px;">
-            <input type="text" id="busquedaCliente" placeholder="Ej: Juan o 097350894" style="flex:1; padding:10px; border-radius:5px; border:1px solid #ccc;">
+        <label>🔍 Buscar Cliente:</label>
+        <div style="display:flex; gap:10px; margin-top:5px;">
+            <input type="text" id="busquedaCliente" placeholder="Nombre o Celular" style="flex:1; padding:10px; border-radius:5px; border:1px solid #ccc;">
             <button type="button" onclick="verificarCliente()" style="background: var(--accent); color:white;">Verificar</button>
         </div>
         <p id="statusCliente" style="margin: 10px 0 0; font-weight: bold;"></p>
@@ -41,65 +40,58 @@
 
     <div class="mode-selector">
         Tipo de Venta: 
-        <select id="tipoVenta" onchange="calcular()" style="padding:5px; border-radius:5px;">
+        <select id="tipoVenta" onchange="calcular()">
             <option value="pack">Pack / Tratamiento Completo</option>
             <option value="unica">Sesión Individual</option>
         </select>
     </div>
 
     <form id="formPresupuesto">
-        <!-- Sección PAI -->
+        <!-- SECCIÓN PAI -->
         <section>
             <h2>Packs PAI</h2>
-            <div class="grid">
-                <label><input type="checkbox" data-id="pai_esencial" data-name="PAI Esencial" class="no-desc"> PAI Esencial <span class="price-tag"></span></label>
-                <label><input type="checkbox" data-id="pai_avanzado" data-name="PAI Avanzado" class="no-desc"> PAI Avanzado <span class="price-tag"></span></label>
-                <label><input type="checkbox" data-id="pai_superior" data-name="PAI Superior" class="no-desc"> PAI Superior <span class="price-tag"></span></label>
-            </div>
+            <div class="grid" id="sec-pai"></div>
         </section>
 
+        <!-- HIFU -->
         <section>
             <h2>HIFU (Rostro y Cuerpo)</h2>
-            <div class="grid">
-                <label><input type="checkbox" data-id="hifu_zona" data-name="HIFU 1 Zona"> 1 Zona <span class="price-tag"></span></label>
-                <label><input type="checkbox" data-id="hifu_papada" data-name="HIFU Papada"> Papada <span class="price-tag"></span></label>
-                <label><input type="checkbox" data-id="hifu_facial" data-name="HIFU Facial Completo"> Facial <span class="price-tag"></span></label>
-                <label><input type="checkbox" data-id="hifu_4_zonas" data-name="Combo 4 Zonas"> 4 Zonas <span class="price-tag"></span></label>
-                <label><input type="checkbox" data-id="hifu_cuerpo" data-name="Cuerpo Completo"> Cuerpo (8z) <span class="price-tag"></span></label>
-            </div>
+            <div class="grid" id="sec-hifu"></div>
         </section>
 
+        <!-- CORPORALES CON SELECCIÓN NUMÉRICA -->
         <section>
-            <h2>Corporales y Faciales</h2>
-            <div class="grid">
-                <label><input type="checkbox" data-id="fraccionada" data-name="RF Fraccionada"> RF Fraccionada <span class="price-tag"></span></label>
-                <label><input type="checkbox" data-id="body" data-name="BodySculpt (8 ses)"> BodySculpt <span class="price-tag"></span></label>
-                <label><input type="checkbox" data-id="lipolaser" data-name="Lipoláser (8 ses)"> Lipoláser <span class="price-tag"></span></label>
-                <label><input type="checkbox" data-id="preso" data-name="Presoterapia (6 ses)"> Presoterapia <span class="price-tag"></span></label>
-                <label><input type="checkbox" data-id="exilis" data-name="Exilis (4 ses)"> Exilis <span class="price-tag"></span></label>
-                <label><input type="checkbox" data-id="limpieza" data-name="Limpieza Facial"> Limpieza Facial <span class="price-tag"></span></label>
-            </div>
+            <h2>Corporales y Faciales (Packs)</h2>
+            <p style="font-size: 0.8em; color: #888;">*Selecciona la cantidad de packs (máx 4)</p>
+            <div class="grid" id="sec-corp"></div>
         </section>
 
+        <!-- TRATAMIENTOS VARIOS -->
+        <section>
+            <h2>Tratamientos Varios (x8)</h2>
+            <div class="grid" id="sec-varios"></div>
+        </section>
+
+        <!-- DEPI EXCLUSIVA -->
         <section>
             <h2>Depilación Láser (Pack x6)</h2>
-            <div class="grid">
-                <div>Gdes <input type="number" data-id="depi_grande" data-name="Depi Gde" min="0" value="0" onchange="calcular()"></div>
-                <div>Med <input type="number" data-id="depi_mediana" data-name="Depi Med" min="0" value="0" onchange="calcular()"></div>
-                <div>Chicas <input type="number" data-id="depi_chica" data-name="Depi Chica" min="0" value="0" onchange="calcular()"></div>
-            </div>
+            <div class="grid" id="sec-depi"></div>
         </section>
 
+        <!-- RF FRACCIONADA -->
+        <section>
+            <h2>RF Fraccionada</h2>
+            <div class="grid" id="sec-fraccionada"></div>
+        </section>
+
+        <!-- PACKS ESPECIALES -->
         <section>
             <h2>Packs Especiales</h2>
-            <div class="grid">
-                <label><input type="checkbox" data-id="ultimatum" data-name="Pack Ultimátum" class="no-desc"> Pack Ultimátum <span class="price-tag"></span></label>
-                <label><input type="checkbox" data-id="lifting_premium" data-name="Lifting Facial Premium" class="no-desc"> Lifting Premium <span class="price-tag"></span></label>
-            </div>
+            <div class="grid" id="sec-especiales"></div>
         </section>
     </form>
 
-    <div id="resultado" style="display:none; padding:15px; border-top: 2px solid var(--primary);"></div>
+    <div id="resultado" style="display:none; padding:15px; background: #fff; border: 2px solid var(--primary); border-radius: 10px; margin-bottom: 20px;"></div>
 
     <div class="footer-nav">
         <button onclick="calcular()" class="btn-calc">CALCULAR TOTAL</button>
@@ -113,143 +105,244 @@
     let nombreCliente = "Cliente";
 
     const PRECIOS = {
-        // PACKS PAI
-        pai_esencial: { nuevo: 59900, viejo: 49900, ses: 1, u: 59900 },
-        pai_avanzado: { nuevo: 79900, viejo: 79900, ses: 1, u: 79900 },
-        pai_superior: { nuevo: 99900, viejo: 99900, ses: 1, u: 99900 },
+        // PAI
+        pai_esencial: { name: "PAI Esencial", nuevo: 59900, viejo: 49900, u: 59900, tipo: 'pack_fijo' },
+        pai_avanzado: { name: "PAI Avanzado", nuevo: 79900, viejo: 79900, u: 79900, tipo: 'pack_fijo' },
+        pai_superior: { name: "PAI Superior", nuevo: 99900, viejo: 99900, u: 99900, tipo: 'pack_fijo' },
         
         // HIFU
-        hifu_zona: { nuevo: 15900, viejo: 15900, ses: 1, u: 15900 },
-        hifu_papada: { nuevo: 5900, viejo: 5900, ses: 1, u: 5900 },
-        hifu_facial: { nuevo: 12900, viejo: 10900, ses: 1, u: 12900 },
-        hifu_4_zonas: { nuevo: 41900, viejo: 41900, ses: 1, u: 41900 },
-        hifu_cuerpo: { nuevo: 71900, viejo: 71900, ses: 1, u: 71900 },
-        
-        // CORPORALES (u = precio por sesión individual)
-        fraccionada: { nuevo: 11900, viejo: 6900, ses: 1, u: 11900 },
-        body: { nuevo: 16500, viejo: 9900, ses: 8, u: 4000 },
-        lipolaser: { nuevo: 18900, viejo: 15900, ses: 8, u: 5000 },
-        preso: { nuevo: 9900, viejo: 9900, ses: 6, u: 3300 },
-        exilis: { nuevo: 18900, viejo: 12900, ses: 4, u: 18900 }, // No pasaste u de Exilis, asumo pack
-        limpieza: { nuevo: 2750, viejo: 2750, ses: 1, u: 2750 },
-        
-        // DEPI (u = precio por sesión individual)
-        depi_grande: { nuevo: 16900, viejo: 16900, ses: 6, u: 6633 },
-        depi_mediana: { nuevo: 11900, viejo: 8900, ses: 6, u: 5300 },
-        depi_chica: { nuevo: 9900, viejo: 4900, ses: 6, u: 1966 },
-        
-        // OTROS
-        ultimatum: { nuevo: 29900, viejo: 29900, ses: 1, u: 29900 },
-        lifting_premium: { nuevo: 26900, viejo: 26900, ses: 1, u: 26900 }
+        hifu_zona: { name: "HIFU 1 Zona", nuevo: 15900, viejo: 15900, u: 15900, tipo: 'hifu' },
+        hifu_2_zonas: { name: "HIFU 2 Zonas", nuevo: 31800, viejo: 31800, u: 31800, tipo: 'hifu' },
+        hifu_papada: { name: "HIFU Papada", nuevo: 5900, viejo: 5900, u: 5900, tipo: 'hifu' },
+        hifu_facial: { name: "HIFU Facial Completo", nuevo: 12900, viejo: 10900, u: 12900, tipo: 'hifu' },
+        hifu_4_zonas: { name: "Combo HIFU 4 Zonas", nuevo: 41900, viejo: 41900, u: 41900, tipo: 'hifu' },
+        hifu_cuerpo: { name: "HIFU Cuerpo Completo (8z)", nuevo: 71900, viejo: 71900, u: 71900, tipo: 'hifu' },
+
+        // CORPORALES (Numéricos)
+        body: { name: "BodySculpt (x8)", nuevo: 16500, viejo: 9900, u: 4000, tipo: 'corp_num' },
+        exilis: { name: "Exilis (x4)", nuevo: 18900, viejo: 12900, u: 18900, tipo: 'corp_num' },
+        lipolaser: { name: "Lipolaser dúo (x8)", nuevo: 18900, viejo: 15900, u: 5000, tipo: 'corp_num' },
+        preso: { name: "Presoterapia (x6)", nuevo: 9900, viejo: 9900, u: 3300, tipo: 'corp_num' },
+        limpieza: { name: "Limpieza Facial", nuevo: 2750, viejo: 2750, u: 2750, tipo: 'corp_num' },
+
+        // VARIOS
+        ultracavitacion: { name: "Ultracavitación (x8)", nuevo: 19900, viejo: 12900, u: 2500, tipo: 'varios' },
+        vaccum: { name: "Vaccumterapia (x8)", nuevo: 16900, viejo: 12900, u: 2200, tipo: 'varios' },
+        velashape: { name: "Velashape (x8)", nuevo: 16900, viejo: 12900, u: 2200, tipo: 'varios' },
+
+        // DEPI
+        depi_combo1: { name: "2 Zonas chicas + 1 Mediana (x6)", nuevo: 16900, viejo: 16900, u: 16900, tipo: 'depi' },
+        depi_combo2: { name: "4 Zonas chicas (x6)", nuevo: 16900, viejo: 16900, u: 16900, tipo: 'depi' },
+        depi_combo3: { name: "1 Gde + 1 Med + 2 Chicas (x6)", nuevo: 29900, viejo: 29900, u: 29900, tipo: 'depi' },
+        depi_grande: { name: "Depi Zona Grande x6", nuevo: 16900, viejo: 16900, u: 6633, tipo: 'depi' },
+        depi_mediana: { name: "Depi Zona Mediana x6", nuevo: 11900, viejo: 8900, u: 5300, tipo: 'depi' },
+        depi_chica: { name: "Depi Zona Chica x6", nuevo: 9900, viejo: 4900, u: 1966, tipo: 'depi' },
+        depi_facial: { name: "Láser Facial x1", nuevo: 5300, viejo: 5300, u: 5300, tipo: 'depi' },
+
+        // FRACCIONADA
+        frac_1z1s: { name: "Fraccionada: 1 zona 1 sesión", nuevo: 11900, viejo: 11900, u: 11900, tipo: 'frac' },
+        frac_1z3s: { name: "Fraccionada: 1 zona 3 sesiones", nuevo: 29900, viejo: 29900, u: 29900, tipo: 'frac' },
+        frac_3z1s: { name: "Fraccionada: 3 zonas 1 sesión", nuevo: 26900, viejo: 26900, u: 26900, tipo: 'frac' },
+        frac_3z3s: { name: "Fraccionada: 3 zonas 3 sesiones", nuevo: 74900, viejo: 74900, u: 74900, tipo: 'frac' },
+
+        // ESPECIALES
+        ultimatum: { name: "Pack ultimatum: 1 zona hifu + 1 zona lipoláser dúo 8s + vibración", nuevo: 29900, viejo: 29900, u: 29900, tipo: 'especial' },
+        lifting: { name: "Pack lifting facial premium: 4 sesiones exilis + 1 hifu facial", nuevo: 26900, viejo: 26900, u: 26900, tipo: 'especial' }
     };
+
+    function renderizarOpciones() {
+        const specs = [
+            { id: 'sec-pai', filter: 'pack_fijo', type: 'checkbox' },
+            { id: 'sec-hifu', filter: 'hifu', type: 'checkbox' },
+            { id: 'sec-corp', filter: 'corp_num', type: 'number' },
+            { id: 'sec-varios', filter: 'varios', type: 'checkbox' },
+            { id: 'sec-depi', filter: 'depi', type: 'checkbox' },
+            { id: 'sec-fraccionada', filter: 'frac', type: 'checkbox' },
+            { id: 'sec-especiales', filter: 'especial', type: 'checkbox' }
+        ];
+
+        specs.forEach(spec => {
+            const container = document.getElementById(spec.id);
+            container.innerHTML = '';
+            for (let key in PRECIOS) {
+                if (PRECIOS[key].tipo === spec.filter) {
+                    const item = PRECIOS[key];
+                    const div = document.createElement('div');
+                    div.className = 'item-row';
+
+                    if (spec.type === 'checkbox') {
+                        div.innerHTML = `
+                            <label>
+                                <input type="checkbox" data-id="${key}" onchange="calcular()"> ${item.name}
+                            </label>
+                            <span class="price-tag" id="p-${key}"></span>
+                        `;
+                    } else {
+                        div.innerHTML = `
+                            <span>${item.name}</span>
+                            <div>
+                                <span class="price-tag" id="p-${key}"></span>
+                                <input type="number" data-id="${key}" min="0" max="4" value="0" onchange="calcular()">
+                            </div>
+                        `;
+                    }
+
+                    container.appendChild(div);
+                }
+            }
+        });
+    }
 
     async function verificarCliente() {
         const input = document.getElementById('busquedaCliente').value.trim();
         const status = document.getElementById('statusCliente');
-        if(!input) return;
+        if (!input) return;
 
-        status.innerText = "🔍 Verificando...";
-        // Simulación o llamada a n8n
+        status.innerText = "🔍 Buscando...";
         try {
             const resp = await fetch(`https://n8n.srv1043651.hstgr.cloud/webhook/verificador-cliente?dato=${encodeURIComponent(input)}`);
             const data = await resp.json();
-            if(data.esCliente) {
-                esViejo = true;
-                nombreCliente = data.nombre || "Cliente";
-                status.innerHTML = `✅ ¡Hola ${nombreCliente}! (Paciente Antiguo)`;
-                status.style.color = "green";
-            } else {
-                esViejo = false;
-                nombreCliente = "Cliente";
-                status.innerText = "❌ Paciente Nuevo";
-                status.style.color = "red";
-            }
+            esViejo = !!data.esCliente;
+            nombreCliente = data.nombre || "Cliente";
+            status.innerHTML = esViejo ? `✅ Hola ${nombreCliente} (Paciente Antiguo)` : `❌ Paciente Nuevo`;
+            status.style.color = esViejo ? "green" : "red";
             calcular();
-        } catch (e) { console.error(e); }
+        } catch (e) {
+            status.innerText = "⚠️ Error de conexión";
+        }
+    }
+
+    function registrarResumen(resumen, key, name, price) {
+        if (!resumen[key]) {
+            resumen[key] = {
+                name,
+                qty: 0,
+                subtotal: 0,
+                descuento: 0
+            };
+        }
+
+        resumen[key].qty += 1;
+        resumen[key].subtotal += price;
+    }
+
+    function aplicarDescuentoCombinacion(unidadesCombo, resumen) {
+        if (unidadesCombo.length < 2) return 0;
+
+        // Ordenar de mayor a menor para que los descuentos caigan sobre los más baratos
+        const ordenadas = [...unidadesCombo].sort((a, b) => b.price - a.price);
+
+        let descuentoTotal = 0;
+
+        ordenadas.forEach((item, index) => {
+            if (index === 0) return; // primer tratamiento sin descuento
+
+            const porcentaje = (index + 1) * 10; 
+            // index 1 => 20%, index 2 => 30%, index 3 => 40%, etc.
+
+            const descuento = item.price * (porcentaje / 100);
+            descuentoTotal += descuento;
+
+            if (resumen[item.resumenKey]) {
+                resumen[item.resumenKey].descuento += descuento;
+            }
+        });
+
+        return descuentoTotal;
     }
 
     function calcular() {
-        let items = [];
-        let itemsParaDescuento = [];
-        let subtotalPreDescuento = 0;
         const modo = document.getElementById('tipoVenta').value;
-        const form = document.getElementById('formPresupuesto');
-        const inputs = form.querySelectorAll('input[type=checkbox], input[type=number]');
 
-        // 1. Limpiar tags de precios en la UI
-        document.querySelectorAll('.price-tag').forEach(tag => {
-            const el = tag.parentElement.querySelector('input');
-            if(!el) return;
-            const id = el.dataset.id;
-            let p = esViejo ? PRECIOS[id].viejo : PRECIOS[id].nuevo;
-            if(modo === 'unica') p = PRECIOS[id].u;
-            tag.innerHTML = `$${Math.round(p).toLocaleString()}`;
-        });
+        let subtotalGeneral = 0;
+        let resumen = {};
+        let unidadesCombo = [];
 
-        // 2. Recolectar seleccionados
-        inputs.forEach(el => {
-            const id = el.dataset.id;
-            const config = PRECIOS[id];
-            let precioUnitario = esViejo ? config.viejo : config.nuevo;
-            if(modo === 'unica') precioUnitario = config.u;
+        for (let key in PRECIOS) {
+            const config = PRECIOS[key];
+            const input = document.querySelector(`[data-id="${key}"]`);
 
-            if(el.type === 'checkbox' && el.checked) {
-                const itemObj = { name: el.dataset.name, price: precioUnitario, canDiscount: !el.classList.contains('no-desc') };
-                items.push(itemObj);
-                subtotalPreDescuento += precioUnitario;
-                if(itemObj.canDiscount) itemsParaDescuento.push(itemObj);
-            } 
-            else if(el.type === 'number' && el.value > 0) {
-                const totalPorCantidad = precioUnitario * el.value;
-                items.push({ name: `${el.dataset.name} (x${el.value})`, price: totalPorCantidad, canDiscount: false });
-                subtotalPreDescuento += totalPorCantidad;
+            let pUnit = esViejo ? config.viejo : config.nuevo;
+            if (modo === 'unica') pUnit = config.u;
+
+            const tag = document.getElementById(`p-${key}`);
+            if (tag) tag.innerText = `$${Math.round(pUnit).toLocaleString()}`;
+
+            if (!input) continue;
+
+            if (input.type === 'checkbox' && input.checked) {
+                registrarResumen(resumen, key, config.name, pUnit);
+                unidadesCombo.push({
+                    resumenKey: key,
+                    name: config.name,
+                    price: pUnit
+                });
+                subtotalGeneral += pUnit;
             }
-        });
 
-        // 3. Aplicar Lógica de Descuento (Solo al de menor valor del grupo de descuento)
-        let descuentoPesos = 0;
-        let detalleDescuento = "";
+            if (input.type === 'number' && parseInt(input.value || 0) > 0) {
+                const cant = parseInt(input.value);
 
-        if (itemsParaDescuento.length >= 2) {
-            // Ordenar por precio de menor a mayor
-            itemsParaDescuento.sort((a, b) => a.price - b.price);
-            const masBarato = itemsParaDescuento[0];
-            let porcentaje = 0;
-
-            if (itemsParaDescuento.length === 2) porcentaje = 0.20;
-            if (itemsParaDescuento.length === 3) porcentaje = 0.30;
-            if (itemsParaDescuento.length >= 4) porcentaje = 0.40;
-
-            descuentoPesos = masBarato.price * porcentaje;
-            detalleDescuento = `${porcentaje * 100}% off en ${masBarato.name}`;
+                for (let i = 0; i < cant; i++) {
+                    registrarResumen(resumen, key, config.name, pUnit);
+                    unidadesCombo.push({
+                        resumenKey: key,
+                        name: config.name,
+                        price: pUnit
+                    });
+                    subtotalGeneral += pUnit;
+                }
+            }
         }
 
-        const totalFinal = subtotalPreDescuento - descuentoPesos;
-        
-        // 4. Mostrar Resultados
+        const descuentoCombinacion = aplicarDescuentoCombinacion(unidadesCombo, resumen);
+        const total = subtotalGeneral - descuentoCombinacion;
+
         const resDiv = document.getElementById('resultado');
         resDiv.style.display = "block";
-        resDiv.innerHTML = `
-            <h3>Resumen para ${nombreCliente}</h3>
-            <ul style="list-style:none; padding:0;">
-                ${items.map(i => `<li>${i.name}: $${Math.round(i.price).toLocaleString()}</li>`).join('')}
-            </ul>
-            <hr>
-            <p>Subtotal:$${Math.round(subtotalPreDescuento).toLocaleString()}</p>
-            ${descuentoPesos > 0 ? `<p style="color:green">🎁 Descuento: -$${Math.round(descuentoPesos).toLocaleString()} (${detalleDescuento})</p>` : ''}
-            <h2 style="color:var(--primary)">TOTAL:$${Math.round(totalFinal).toLocaleString()}</h2>
-            <p>💳 <b>12 cuotas de: $${Math.round(totalFinal/12).toLocaleString()}</b></p>
-        `;
+        resDiv.innerHTML = `<h3>Resumen: ${nombreCliente}</h3><ul>`;
 
-        // Preparar mensaje WS
-        window.mensajeWS = `Hola ${nombreCliente}!%0A*Presupuesto Espacio HIFU*%0A%0A${items.map(i => `- ${i.name}:$${Math.round(i.price).toLocaleString()}`).join('%0A')}${descuentoPesos > 0 ? `%0A%0A🎁 Descuento: -$${Math.round(descuentoPesos).toLocaleString()}` : ''}%0A%0A*TOTAL:$${Math.round(totalFinal).toLocaleString()}*%0A💳 O 12 cuotas de $${Math.round(totalFinal/12).toLocaleString()}`;
+        Object.values(resumen).forEach(item => {
+            resDiv.innerHTML += `
+                <li>
+                    ${item.name}${item.qty > 1 ? ` x${item.qty}` : ''}: 
+                    $${Math.round(item.subtotal).toLocaleString()}
+                    ${item.descuento > 0
+                        ? `<small style="color:green">(-$${Math.round(item.descuento).toLocaleString()} dcto. combinación)</small>`
+                        : ''
+                    }
+                </li>
+            `;
+        });
+
+        if (descuentoCombinacion > 0) {
+            resDiv.innerHTML += `
+                <li style="color:green;">
+                    Dcto total combinación: -$${Math.round(descuentoCombinacion).toLocaleString()}
+                </li>
+            `;
+        }
+
+        resDiv.innerHTML += `</ul><hr><h2 style="margin:0;">TOTAL: $${Math.round(total).toLocaleString()}</h2>`;
+        resDiv.innerHTML += `<p><b>12 cuotas de: $${Math.round(total / 12).toLocaleString()}</b></p>`;
+
+        const detalleWS = Object.values(resumen).map(item => {
+            const qtyTxt = item.qty > 1 ? ` x${item.qty}` : '';
+            const descTxt = item.descuento > 0
+                ? ` (desc. -$${Math.round(item.descuento).toLocaleString()})`
+                : '';
+            return `- ${item.name}${qtyTxt}: $${Math.round(item.subtotal).toLocaleString()}${descTxt}`;
+        }).join('%0A');
+
+        window.mensajeWS =
+            `Hola ${nombreCliente}! Soy de Espacio HIFU. Presupuesto:%0A%0A` +
+            detalleWS +
+            `${descuentoCombinacion > 0 ? `%0A- Descuento total combinación: -$${Math.round(descuentoCombinacion).toLocaleString()}` : ''}` +
+            `%0A%0A*TOTAL: $${Math.round(total).toLocaleString()}*%0A` +
+            `O 12 cuotas de $${Math.round(total / 12).toLocaleString()}`;
+
         document.getElementById('btnWs').style.display = "block";
     }
 
-    function enviarWS() {
-        window.open(`https://wa.me/?text=${window.mensajeWS}`, '_blank');
-    }
+    renderizarOpciones();
 </script>
-
-</body>
-</html>
