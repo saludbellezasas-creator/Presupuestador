@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Presupuestador Espacio HIFU - Pro v2</title>
+    <title>Presupuestador Espacio HIFU - Pro v3</title>
     <style>
         :root { --primary: #795548; --bg: #f5f1e3; --text: #5a3825; --white: #ffffff; --accent: #2196F3; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 10px; padding-bottom: 80px; }
@@ -12,16 +12,16 @@
         .verificador { background: #e3f2fd; padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #bbdefb; }
         section { border: 1px solid #ddd; padding: 15px; border-radius: 10px; margin-bottom: 20px; background: #fffcf5; }
         .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; }
-        .item-row { display: flex; justify-content: space-between; align-items: center; padding: 8px; border-bottom: 1px solid #eee; transition: 0.2s; }
+        .item-row { display: flex; justify-content: space-between; align-items: center; padding: 8px; border-bottom: 1px solid #eee; transition: 0.2s; gap: 10px; }
         .item-row:hover { background: #fdf8f0; }
-        .price-tag { font-weight: bold; color: var(--primary); margin-left: auto; margin-right: 10px; }
+        .price-tag { font-weight: bold; color: var(--primary); margin-left: auto; margin-right: 10px; white-space: nowrap; }
         input[type="number"] { width: 50px; padding: 5px; border-radius: 5px; border: 1px solid #ccc; text-align: center; }
         .footer-nav { position: fixed; bottom: 0; left: 0; right: 0; background: white; padding: 15px; border-top: 2px solid var(--primary); display: flex; gap: 10px; justify-content: center; z-index: 1000; }
         button { padding: 12px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
         .btn-calc { background: var(--primary); color: white; }
         .btn-ws { background: #25d366; color: white; display: none; }
-        .mode-selector { text-align: center; margin-bottom: 15px; font-weight: bold; background: #f9f9f9; padding: 10px; border-radius: 8px; }
-        select { padding: 8px; border-radius: 5px; border: 1px solid #ccc; }
+        .nota { font-size: 0.9em; color: #666; margin-top: -8px; margin-bottom: 10px; text-align: center; }
+        .sin-dcto { font-size: 0.8em; color: #8d6e63; font-style: italic; }
     </style>
 </head>
 <body>
@@ -38,55 +38,42 @@
         <p id="statusCliente" style="margin: 10px 0 0; font-weight: bold;"></p>
     </div>
 
-    <div class="mode-selector">
-        Tipo de Venta: 
-        <select id="tipoVenta" onchange="calcular()">
-            <option value="pack">Pack / Tratamiento Completo</option>
-            <option value="unica">Sesión Individual</option>
-        </select>
-    </div>
-
     <form id="formPresupuesto">
-        <!-- SECCIÓN PAI -->
         <section>
             <h2>Packs PAI</h2>
+            <p class="nota">Estos packs no participan en descuentos por combinación</p>
             <div class="grid" id="sec-pai"></div>
         </section>
 
-        <!-- HIFU -->
         <section>
             <h2>HIFU (Rostro y Cuerpo)</h2>
             <div class="grid" id="sec-hifu"></div>
         </section>
 
-        <!-- CORPORALES CON SELECCIÓN NUMÉRICA -->
         <section>
             <h2>Corporales y Faciales (Packs)</h2>
-            <p style="font-size: 0.8em; color: #888;">*Selecciona la cantidad de packs (máx 4)</p>
+            <p class="nota">Selecciona cantidad de packs (máx. 4)</p>
             <div class="grid" id="sec-corp"></div>
         </section>
 
-        <!-- TRATAMIENTOS VARIOS -->
         <section>
             <h2>Tratamientos Varios (x8)</h2>
             <div class="grid" id="sec-varios"></div>
         </section>
 
-        <!-- DEPI EXCLUSIVA -->
         <section>
             <h2>Depilación Láser (Pack x6)</h2>
             <div class="grid" id="sec-depi"></div>
         </section>
 
-        <!-- RF FRACCIONADA -->
         <section>
             <h2>RF Fraccionada</h2>
             <div class="grid" id="sec-fraccionada"></div>
         </section>
 
-        <!-- PACKS ESPECIALES -->
         <section>
             <h2>Packs Especiales</h2>
+            <p class="nota">Estos packs no participan en descuentos por combinación</p>
             <div class="grid" id="sec-especiales"></div>
         </section>
     </form>
@@ -94,61 +81,76 @@
     <div id="resultado" style="display:none; padding:15px; background: #fff; border: 2px solid var(--primary); border-radius: 10px; margin-bottom: 20px;"></div>
 
     <div class="footer-nav">
-        <button onclick="calcular()" class="btn-calc">CALCULAR TOTAL</button>
-        <button id="btnWs" onclick="enviarWS()" class="btn-ws">ENVIAR WHATSAPP</button>
-        <button onclick="location.reload()" style="background:#eee;">REINICIAR</button>
+        <button onclick="calcular()" type="button" class="btn-calc">CALCULAR TOTAL</button>
+        <button id="btnWs" onclick="enviarWS()" type="button" class="btn-ws">ENVIAR WHATSAPP</button>
+        <button onclick="location.reload()" type="button" style="background:#eee;">REINICIAR</button>
     </div>
 </div>
-
 <script>
     let esViejo = false;
     let nombreCliente = "Cliente";
+    let mensajeWS = "";
 
     const PRECIOS = {
-        // PAI
-        pai_esencial: { name: "PAI Esencial", nuevo: 59900, viejo: 49900, u: 59900, tipo: 'pack_fijo' },
-        pai_avanzado: { name: "PAI Avanzado", nuevo: 79900, viejo: 79900, u: 79900, tipo: 'pack_fijo' },
-        pai_superior: { name: "PAI Superior", nuevo: 99900, viejo: 99900, u: 99900, tipo: 'pack_fijo' },
+        // PAI (sin descuento por combinación)
+        pai_esencial: { name: "PAI Esencial", nuevo: 59900, viejo: 49900, tipo: 'pack_fijo' },
+        pai_avanzado: { name: "PAI Avanzado", nuevo: 79900, viejo: 79900, tipo: 'pack_fijo' },
+        pai_superior: { name: "PAI Superior", nuevo: 99900, viejo: 99900, tipo: 'pack_fijo' },
         
         // HIFU
-        hifu_zona: { name: "HIFU 1 Zona", nuevo: 15900, viejo: 15900, u: 15900, tipo: 'hifu' },
-        hifu_2_zonas: { name: "HIFU 2 Zonas", nuevo: 31800, viejo: 31800, u: 31800, tipo: 'hifu' },
-        hifu_papada: { name: "HIFU Papada", nuevo: 5900, viejo: 5900, u: 5900, tipo: 'hifu' },
-        hifu_facial: { name: "HIFU Facial Completo", nuevo: 12900, viejo: 10900, u: 12900, tipo: 'hifu' },
-        hifu_4_zonas: { name: "Combo HIFU 4 Zonas", nuevo: 41900, viejo: 41900, u: 41900, tipo: 'hifu' },
-        hifu_cuerpo: { name: "HIFU Cuerpo Completo (8z)", nuevo: 71900, viejo: 71900, u: 71900, tipo: 'hifu' },
+        hifu_zona: { name: "HIFU 1 Zona", nuevo: 15900, viejo: 15900, tipo: 'hifu' },
+        hifu_2_zonas: { name: "HIFU 2 Zonas", nuevo: 31800, viejo: 31800, tipo: 'hifu' },
+        hifu_papada: { name: "HIFU Papada", nuevo: 5900, viejo: 5900, tipo: 'hifu' },
+        hifu_facial: { name: "HIFU Facial Completo", nuevo: 12900, viejo: 10900, tipo: 'hifu' },
+        hifu_4_zonas: { name: "Combo HIFU 4 Zonas", nuevo: 41900, viejo: 41900, tipo: 'hifu' },
+        hifu_cuerpo: { name: "HIFU Cuerpo Completo (8z)", nuevo: 71900, viejo: 71900, tipo: 'hifu' },
 
-        // CORPORALES (Numéricos)
-        body: { name: "BodySculpt (x8)", nuevo: 16500, viejo: 9900, u: 4000, tipo: 'corp_num' },
-        exilis: { name: "Exilis (x4)", nuevo: 18900, viejo: 12900, u: 18900, tipo: 'corp_num' },
-        lipolaser: { name: "Lipolaser dúo (x8)", nuevo: 18900, viejo: 15900, u: 5000, tipo: 'corp_num' },
-        preso: { name: "Presoterapia (x6)", nuevo: 9900, viejo: 9900, u: 3300, tipo: 'corp_num' },
-        limpieza: { name: "Limpieza Facial", nuevo: 2750, viejo: 2750, u: 2750, tipo: 'corp_num' },
+        // CORPORALES
+        body: { name: "BodySculpt (x8)", nuevo: 16500, viejo: 9900, tipo: 'corp_num' },
+        exilis: { name: "Exilis (x4)", nuevo: 18900, viejo: 12900, tipo: 'corp_num' },
+        lipolaser: { name: "Lipolaser dúo (x8)", nuevo: 18900, viejo: 15900, tipo: 'corp_num' },
+        preso: { name: "Presoterapia (x6)", nuevo: 9900, viejo: 9900, tipo: 'corp_num' },
+        limpieza: { name: "Limpieza Facial", nuevo: 2750, viejo: 2750, tipo: 'corp_num' },
 
         // VARIOS
-        ultracavitacion: { name: "Ultracavitación (x8)", nuevo: 19900, viejo: 12900, u: 2500, tipo: 'varios' },
-        vaccum: { name: "Vaccumterapia (x8)", nuevo: 16900, viejo: 12900, u: 2200, tipo: 'varios' },
-        velashape: { name: "Velashape (x8)", nuevo: 16900, viejo: 12900, u: 2200, tipo: 'varios' },
+        ultracavitacion: { name: "Ultracavitación (x8)", nuevo: 19900, viejo: 12900, tipo: 'varios' },
+        vaccum: { name: "Vaccumterapia (x8)", nuevo: 16900, viejo: 12900, tipo: 'varios' },
+        velashape: { name: "Velashape (x8)", nuevo: 16900, viejo: 12900, tipo: 'varios' },
 
         // DEPI
-        depi_combo1: { name: "2 Zonas chicas + 1 Mediana (x6)", nuevo: 16900, viejo: 16900, u: 16900, tipo: 'depi' },
-        depi_combo2: { name: "4 Zonas chicas (x6)", nuevo: 16900, viejo: 16900, u: 16900, tipo: 'depi' },
-        depi_combo3: { name: "1 Gde + 1 Med + 2 Chicas (x6)", nuevo: 29900, viejo: 29900, u: 29900, tipo: 'depi' },
-        depi_grande: { name: "Depi Zona Grande x6", nuevo: 16900, viejo: 16900, u: 6633, tipo: 'depi' },
-        depi_mediana: { name: "Depi Zona Mediana x6", nuevo: 11900, viejo: 8900, u: 5300, tipo: 'depi' },
-        depi_chica: { name: "Depi Zona Chica x6", nuevo: 9900, viejo: 4900, u: 1966, tipo: 'depi' },
-        depi_facial: { name: "Láser Facial x1", nuevo: 5300, viejo: 5300, u: 5300, tipo: 'depi' },
+        depi_combo1: { name: "2 Zonas chicas + 1 Mediana (x6)", nuevo: 16900, viejo: 16900, tipo: 'depi' },
+        depi_combo2: { name: "4 Zonas chicas (x6)", nuevo: 16900, viejo: 16900, tipo: 'depi' },
+        depi_combo3: { name: "1 Gde + 1 Med + 2 Chicas (x6)", nuevo: 29900, viejo: 29900, tipo: 'depi' },
+        depi_grande: { name: "Depi Zona Grande x6", nuevo: 16900, viejo: 16900, tipo: 'depi' },
+        depi_mediana: { name: "Depi Zona Mediana x6", nuevo: 11900, viejo: 8900, tipo: 'depi' },
+        depi_chica: { name: "Depi Zona Chica x6", nuevo: 9900, viejo: 4900, tipo: 'depi' },
 
         // FRACCIONADA
-        frac_1z1s: { name: "Fraccionada: 1 zona 1 sesión", nuevo: 11900, viejo: 11900, u: 11900, tipo: 'frac' },
-        frac_1z3s: { name: "Fraccionada: 1 zona 3 sesiones", nuevo: 29900, viejo: 29900, u: 29900, tipo: 'frac' },
-        frac_3z1s: { name: "Fraccionada: 3 zonas 1 sesión", nuevo: 26900, viejo: 26900, u: 26900, tipo: 'frac' },
-        frac_3z3s: { name: "Fraccionada: 3 zonas 3 sesiones", nuevo: 74900, viejo: 74900, u: 74900, tipo: 'frac' },
+        frac_1z1s: { name: "Fraccionada: 1 zona 1 sesión", nuevo: 11900, viejo: 11900, tipo: 'frac' },
+        frac_1z3s: { name: "Fraccionada: 1 zona 3 sesiones", nuevo: 29900, viejo: 29900, tipo: 'frac' },
+        frac_3z1s: { name: "Fraccionada: 3 zonas 1 sesión", nuevo: 26900, viejo: 26900, tipo: 'frac' },
+        frac_3z3s: { name: "Fraccionada: 3 zonas 3 sesiones", nuevo: 74900, viejo: 74900, tipo: 'frac' },
 
-        // ESPECIALES
-        ultimatum: { name: "Pack ultimatum: 1 zona hifu + 1 zona lipoláser dúo 8s + vibración", nuevo: 29900, viejo: 29900, u: 29900, tipo: 'especial' },
-        lifting: { name: "Pack lifting facial premium: 4 sesiones exilis + 1 hifu facial", nuevo: 26900, viejo: 26900, u: 26900, tipo: 'especial' }
+        // ESPECIALES (sin descuento por combinación)
+        ultimatum: { name: "Pack ultimatum: 1 zona hifu + 1 zona lipoláser dúo 8s + vibración", nuevo: 29900, viejo: 29900, tipo: 'especial' },
+        lifting: { name: "Pack lifting facial premium: 4 sesiones exilis + 1 hifu facial", nuevo: 26900, viejo: 26900, tipo: 'especial' }
     };
+
+    function getPrecio(config) {
+        return esViejo ? config.viejo : config.nuevo;
+    }
+
+    function esElegibleParaDescuento(tipo) {
+        return !['pack_fijo', 'especial'].includes(tipo);
+    }
+
+    function obtenerPorcentajeSegunCantidad(cantidad) {
+        if (cantidad < 2) return 0;
+        if (cantidad === 2) return 20;
+        if (cantidad === 3) return 30;
+        if (cantidad === 4) return 40;
+        return 50;
+    }
 
     function renderizarOpciones() {
         const specs = [
@@ -164,33 +166,45 @@
         specs.forEach(spec => {
             const container = document.getElementById(spec.id);
             container.innerHTML = '';
+
             for (let key in PRECIOS) {
-                if (PRECIOS[key].tipo === spec.filter) {
-                    const item = PRECIOS[key];
-                    const div = document.createElement('div');
-                    div.className = 'item-row';
+                if (PRECIOS[key].tipo !== spec.filter) continue;
 
-                    if (spec.type === 'checkbox') {
-                        div.innerHTML = `
-                            <label>
-                                <input type="checkbox" data-id="${key}" onchange="calcular()"> ${item.name}
-                            </label>
+                const item = PRECIOS[key];
+                const div = document.createElement('div');
+                div.className = 'item-row';
+
+                if (spec.type === 'checkbox') {
+                    div.innerHTML = `
+                        <label>
+                            <input type="checkbox" data-id="${key}" onchange="calcular()"> ${item.name}
+                        </label>
+                        <span class="price-tag" id="p-${key}"></span>
+                    `;
+                } else {
+                    div.innerHTML = `
+                        <span>${item.name}</span>
+                        <div>
                             <span class="price-tag" id="p-${key}"></span>
-                        `;
-                    } else {
-                        div.innerHTML = `
-                            <span>${item.name}</span>
-                            <div>
-                                <span class="price-tag" id="p-${key}"></span>
-                                <input type="number" data-id="${key}" min="0" max="4" value="0" onchange="calcular()">
-                            </div>
-                        `;
-                    }
-
-                    container.appendChild(div);
+                            <input type="number" data-id="${key}" min="0" max="4" value="0" onchange="calcular()">
+                        </div>
+                    `;
                 }
+
+                container.appendChild(div);
             }
         });
+
+        actualizarPreciosUI();
+    }
+
+    function actualizarPreciosUI() {
+        for (let key in PRECIOS) {
+            const tag = document.getElementById(`p-${key}`);
+            if (tag) {
+                tag.innerText = `$${Math.round(getPrecio(PRECIOS[key])).toLocaleString()}`;
+            }
+        }
     }
 
     async function verificarCliente() {
@@ -206,119 +220,117 @@
             nombreCliente = data.nombre || "Cliente";
             status.innerHTML = esViejo ? `✅ Hola ${nombreCliente} (Paciente Antiguo)` : `❌ Paciente Nuevo`;
             status.style.color = esViejo ? "green" : "red";
+            actualizarPreciosUI();
             calcular();
         } catch (e) {
             status.innerText = "⚠️ Error de conexión";
         }
     }
 
-    function registrarResumen(resumen, key, name, price) {
+    function registrarItem(resumen, key, nombre, precio, elegibleDescuento) {
         if (!resumen[key]) {
             resumen[key] = {
-                name,
+                key,
+                nombre,
                 qty: 0,
                 subtotal: 0,
-                descuento: 0
+                descuento: 0,
+                elegibleDescuento
             };
         }
 
         resumen[key].qty += 1;
-        resumen[key].subtotal += price;
-    }
-
-    function aplicarDescuentoCombinacion(unidadesCombo, resumen) {
-        if (unidadesCombo.length < 2) return 0;
-
-        // Ordenar de mayor a menor para que los descuentos caigan sobre los más baratos
-        const ordenadas = [...unidadesCombo].sort((a, b) => b.price - a.price);
-
-        let descuentoTotal = 0;
-
-        ordenadas.forEach((item, index) => {
-            if (index === 0) return; // primer tratamiento sin descuento
-
-            const porcentaje = (index + 1) * 10; 
-            // index 1 => 20%, index 2 => 30%, index 3 => 40%, etc.
-
-            const descuento = item.price * (porcentaje / 100);
-            descuentoTotal += descuento;
-
-            if (resumen[item.resumenKey]) {
-                resumen[item.resumenKey].descuento += descuento;
-            }
-        });
-
-        return descuentoTotal;
+        resumen[key].subtotal += precio;
     }
 
     function calcular() {
-        const modo = document.getElementById('tipoVenta').value;
-
         let subtotalGeneral = 0;
         let resumen = {};
-        let unidadesCombo = [];
+        let itemsElegibles = [];
 
         for (let key in PRECIOS) {
             const config = PRECIOS[key];
             const input = document.querySelector(`[data-id="${key}"]`);
-
-            let pUnit = esViejo ? config.viejo : config.nuevo;
-            if (modo === 'unica') pUnit = config.u;
-
-            const tag = document.getElementById(`p-${key}`);
-            if (tag) tag.innerText = `$${Math.round(pUnit).toLocaleString()}`;
-
             if (!input) continue;
 
+            const precio = getPrecio(config);
+            const elegible = esElegibleParaDescuento(config.tipo);
+
             if (input.type === 'checkbox' && input.checked) {
-                registrarResumen(resumen, key, config.name, pUnit);
-                unidadesCombo.push({
-                    resumenKey: key,
-                    name: config.name,
-                    price: pUnit
-                });
-                subtotalGeneral += pUnit;
+                registrarItem(resumen, key, config.name, precio, elegible);
+                subtotalGeneral += precio;
+
+                if (elegible) {
+                    itemsElegibles.push({
+                        key,
+                        nombre: config.name,
+                        precio
+                    });
+                }
             }
 
-            if (input.type === 'number' && parseInt(input.value || 0) > 0) {
-                const cant = parseInt(input.value);
+            if (input.type === 'number') {
+                const cantidad = parseInt(input.value || "0", 10);
 
-                for (let i = 0; i < cant; i++) {
-                    registrarResumen(resumen, key, config.name, pUnit);
-                    unidadesCombo.push({
-                        resumenKey: key,
-                        name: config.name,
-                        price: pUnit
-                    });
-                    subtotalGeneral += pUnit;
+                if (cantidad > 0) {
+                    for (let i = 0; i < cantidad; i++) {
+                        registrarItem(resumen, key, config.name, precio, elegible);
+                        subtotalGeneral += precio;
+
+                        if (elegible) {
+                            itemsElegibles.push({
+                                key,
+                                nombre: config.name,
+                                precio
+                            });
+                        }
+                    }
                 }
             }
         }
 
-        const descuentoCombinacion = aplicarDescuentoCombinacion(unidadesCombo, resumen);
-        const total = subtotalGeneral - descuentoCombinacion;
+        let descuentoTotal = 0;
 
+        const cantidadElegibles = itemsElegibles.length;
+        const porcentaje = obtenerPorcentajeSegunCantidad(cantidadElegibles);
+
+        if (porcentaje > 0) {
+            // SOLO un descuento: sobre el tratamiento elegible de menor valor
+            itemsElegibles.sort((a, b) => a.precio - b.precio);
+            const itemConDescuento = itemsElegibles[0];
+
+            descuentoTotal = itemConDescuento.precio * (porcentaje / 100);
+            resumen[itemConDescuento.key].descuento += descuentoTotal;
+        }
+
+        const total = subtotalGeneral - descuentoTotal;
         const resDiv = document.getElementById('resultado');
+
         resDiv.style.display = "block";
         resDiv.innerHTML = `<h3>Resumen: ${nombreCliente}</h3><ul>`;
 
         Object.values(resumen).forEach(item => {
+            const qtyTxt = item.qty > 1 ? ` x${item.qty}` : '';
+            const dctoTxt = item.descuento > 0
+                ? ` <small style="color:green">(-$${Math.round(item.descuento).toLocaleString()} dcto. combinación)</small>`
+                : '';
+            const sinDctoTxt = !item.elegibleDescuento
+                ? ` <small style="color:#8d6e63;font-style:italic;">(sin descuento por combinación)</small>`
+                : '';
+
             resDiv.innerHTML += `
                 <li>
-                    ${item.name}${item.qty > 1 ? ` x${item.qty}` : ''}: 
-                    $${Math.round(item.subtotal).toLocaleString()}
-                    ${item.descuento > 0
-                        ? `<small style="color:green">(-$${Math.round(item.descuento).toLocaleString()} dcto. combinación)</small>`
-                        : ''
-                    }
+                    ${item.nombre}${qtyTxt}: $${Math.round(item.subtotal).toLocaleString()}
+                    ${dctoTxt}
+                    ${sinDctoTxt}
                 </li>
             `;
         });
 
-        if (descuentoCombinacion > 0) {
+        if (descuentoTotal > 0) {
             resDiv.innerHTML += `
                 <li style="color:green;">
-                    Dcto total combinación: -$${Math.round(descuentoCombinacion).toLocaleString()}
+                    Descuento total combinación: -$${Math.round(descuentoTotal).toLocaleString()}
                 </li>
             `;
         }
@@ -331,17 +343,23 @@
             const descTxt = item.descuento > 0
                 ? ` (desc. -$${Math.round(item.descuento).toLocaleString()})`
                 : '';
-            return `- ${item.name}${qtyTxt}: $${Math.round(item.subtotal).toLocaleString()}${descTxt}`;
+            return `- ${item.nombre}${qtyTxt}: $${Math.round(item.subtotal).toLocaleString()}${descTxt}`;
         }).join('%0A');
 
-        window.mensajeWS =
+        mensajeWS =
             `Hola ${nombreCliente}! Soy de Espacio HIFU. Presupuesto:%0A%0A` +
             detalleWS +
-            `${descuentoCombinacion > 0 ? `%0A- Descuento total combinación: -$${Math.round(descuentoCombinacion).toLocaleString()}` : ''}` +
-            `%0A%0A*TOTAL: $${Math.round(total).toLocaleString()}*%0A` +
-            `O 12 cuotas de $${Math.round(total / 12).toLocaleString()}`;
+            (descuentoTotal > 0 ? `%0A- Descuento total combinación: -$${Math.round(descuentoTotal).toLocaleString()}` : '') +
+            `%0A%0A*TOTAL: $${Math.round(total).toLocaleString()}*` +
+            `%0AO 12 cuotas de $${Math.round(total / 12).toLocaleString()}`;
 
-        document.getElementById('btnWs').style.display = "block";
+        document.getElementById('btnWs').style.display = Object.keys(resumen).length ? "block" : "none";
+    }
+
+    function enviarWS() {
+        if (!mensajeWS) return;
+        const url = `https://wa.me/?text=${mensajeWS}`;
+        window.open(url, '_blank');
     }
 
     renderizarOpciones();
