@@ -101,13 +101,15 @@
         hifu_zona: { name: "HIFU 1 Zona", nuevo: 15900, viejo: 15900, tipo: 'hifu' },
         hifu_2_zonas: { name: "HIFU 2 Zonas", nuevo: 31800, viejo: 31800, tipo: 'hifu' },
         hifu_papada: { name: "HIFU Papada", nuevo: 5900, viejo: 5900, tipo: 'hifu' },
-        hifu_facial: { name: "HIFU Facial Completo", nuevo: 12900, viejo: 10900, tipo: 'hifu' },
+        hifu_facial: { name: "HIFU Facial rostro,cuello y papada", nuevo: 12900, viejo: 10900, tipo: 'hifu' },
+        hifu_facial_completo: { name: "HIFU Facial rostro,cuello, papada y escote", nuevo: 18800, viejo: 15738, tipo: 'hifu' },
         hifu_4_zonas: { name: "Combo HIFU 4 Zonas", nuevo: 41900, viejo: 41900, tipo: 'hifu' },
         hifu_cuerpo: { name: "HIFU Cuerpo Completo (8z)", nuevo: 71900, viejo: 71900, tipo: 'hifu' },
 
         // CORPORALES
         body: { name: "BodySculpt (x8)", nuevo: 16500, viejo: 9900, tipo: 'corp_num' },
         exilis: { name: "Exilis (x4)", nuevo: 18900, viejo: 12900, tipo: 'corp_num' },
+        exilis_pack: { name: "Exilis rostro, cuello, papada y escote (x4)", nuevo: 25900, viejo: 16348, tipo: 'corp_num' },
         lipolaser: { name: "Lipolaser dúo (x8)", nuevo: 18900, viejo: 15900, tipo: 'corp_num' },
         preso: { name: "Presoterapia (x6)", nuevo: 9900, viejo: 9900, tipo: 'corp_num' },
         limpieza: { name: "Limpieza Facial", nuevo: 2750, viejo: 2750, tipo: 'corp_num' },
@@ -159,7 +161,7 @@
             { id: 'sec-hifu', filter: 'hifu', type: 'checkbox' },
             { id: 'sec-corp', filter: 'corp_num', type: 'number' },
             { id: 'sec-varios', filter: 'varios', type: 'checkbox' },
-            { id: 'sec-depi', filter: 'depi', type: 'checkbox' },
+            { id: 'sec-depi', filter: 'depi', type: 'number' },
             { id: 'sec-fraccionada', filter: 'frac', type: 'checkbox' },
             { id: 'sec-especiales', filter: 'especial', type: 'checkbox' }
         ];
