@@ -293,17 +293,23 @@
         }
 
         let descuentoTotal = 0;
+let porcentajeAplicado = 0;
+let tratamientoConDescuento = "";
 
-        const cantidadElegibles = itemsElegibles.length;
-        const porcentaje = obtenerPorcentajeSegunCantidad(cantidadElegibles);
+const cantidadElegibles = itemsElegibles.length;
+const porcentaje = obtenerPorcentajeSegunCantidad(cantidadElegibles);
 
-        if (porcentaje > 0) {
-            // SOLO un descuento: sobre el tratamiento elegible de menor valor
-            itemsElegibles.sort((a, b) => a.precio - b.precio);
-            const itemConDescuento = itemsElegibles[0];
+if (porcentaje > 0) {
+    // SOLO un descuento: sobre el tratamiento elegible de menor valor
+    itemsElegibles.sort((a, b) => a.precio - b.precio);
+    const itemConDescuento = itemsElegibles[0];
 
-            descuentoTotal = itemConDescuento.precio * (porcentaje / 100);
-            resumen[itemConDescuento.key].descuento += descuentoTotal;
+    descuentoTotal = itemConDescuento.precio * (porcentaje / 100);
+    porcentajeAplicado = porcentaje;
+    tratamientoConDescuento = itemConDescuento.nombre;
+
+    resumen[itemConDescuento.key].descuento += descuentoTotal;
+}
         }
 
         const total = subtotalGeneral - descuentoTotal;
