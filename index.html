@@ -321,8 +321,8 @@ if (porcentaje > 0) {
         Object.values(resumen).forEach(item => {
             const qtyTxt = item.qty > 1 ? ` x${item.qty}` : '';
             const dctoTxt = item.descuento > 0
-                ? ` <small style="color:green">(-$${Math.round(item.descuento).toLocaleString()} dcto. combinación)</small>`
-                : '';
+    ? ` <small style="color:green">(-$${Math.round(item.descuento).toLocaleString()} | ${porcentajeAplicado}% off)</small>`
+    : '';
             const sinDctoTxt = !item.elegibleDescuento
                 ? ` <small style="color:#8d6e63;font-style:italic;">(sin descuento por combinación)</small>`
                 : '';
@@ -336,13 +336,21 @@ if (porcentaje > 0) {
             `;
         });
 
-        if (descuentoTotal > 0) {
-            resDiv.innerHTML += `
-                <li style="color:green;">
-                    Descuento total combinación: -$${Math.round(descuentoTotal).toLocaleString()}
-                </li>
-            `;
-        }
+       if (descuentoTotal > 0) {
+    resDiv.innerHTML += `
+        <li style="color:green;">
+            Descuento total combinación: -$${Math.round(descuentoTotal).toLocaleString()}
+        </li>
+    `;
+    
+    resDiv.innerHTML += `
+        <p style="color:green; margin-top:10px;">
+            <b>Regla aplicada:</b> ${cantidadElegibles} tratamientos elegibles = ${porcentajeAplicado}% off sobre el menor valor
+            <br>
+            <b>Tratamiento con descuento:</b> ${tratamientoConDescuento}
+        </p>
+    `;
+}
 
         resDiv.innerHTML += `</ul><hr><h2 style="margin:0;">TOTAL: $${Math.round(total).toLocaleString()}</h2>`;
         resDiv.innerHTML += `<p><b>12 cuotas de: $${Math.round(total / 12).toLocaleString()}</b></p>`;
