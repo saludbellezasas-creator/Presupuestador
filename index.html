@@ -68,6 +68,7 @@
 
         <section>
             <h2>RF Fraccionada</h2>
+            <p class="nota">Selecciona cantidad de packs</p>
             <div class="grid" id="sec-fraccionada"></div>
         </section>
 
@@ -108,8 +109,6 @@
         hifu_5_zonas: { name: "Combo HIFU 5 Zonas", nuevo: 52375, viejo: 52375, tipo: 'hifu' },
         hifu_6_zonas: { name: "Combo HIFU 6 Zonas", nuevo: 62850, viejo: 62850, tipo: 'hifu' },
 
-
-
         // CORPORALES
         body: { name: "BodySculpt (x8)", nuevo: 16500, viejo: 9900, tipo: 'corp_num' },
         exilis: { name: "Exilis (x4)", nuevo: 18900, viejo: 12900, tipo: 'corp_num' },
@@ -132,11 +131,11 @@
         depi_chica: { name: "Depi Zona Chica x6", nuevo: 9900, viejo: 4900, tipo: 'depi' },
         laser_facial_x6: { name: "Láser Facial x6", nuevo: 17900, viejo: 12900, tipo: 'depi' },
 
-        // FRACCIONADA
-        frac_1z1s: { name: "Fraccionada: 1 zona 1 sesión", nuevo: 11900, viejo: 11900, tipo: 'frac' },
-        frac_1z3s: { name: "Fraccionada: 1 zona 3 sesiones", nuevo: 29900, viejo: 29900, tipo: 'frac' },
-        frac_3z1s: { name: "Fraccionada: 3 zonas 1 sesión", nuevo: 26900, viejo: 26900, tipo: 'frac' },
-        frac_3z3s: { name: "Fraccionada: 3 zonas 3 sesiones", nuevo: 74900, viejo: 74900, tipo: 'frac' },
+        // FRACCIONADA — ahora tipo 'frac_num' para manejarlos con input number
+        frac_1z1s: { name: "Fraccionada: 1 zona 1 sesión", nuevo: 11900, viejo: 11900, tipo: 'frac_num' },
+        frac_1z3s: { name: "Fraccionada: 1 zona 3 sesiones", nuevo: 29900, viejo: 29900, tipo: 'frac_num' },
+        frac_3z1s: { name: "Fraccionada: 3 zonas 1 sesión", nuevo: 26900, viejo: 26900, tipo: 'frac_num' },
+        frac_3z3s: { name: "Fraccionada: 3 zonas 3 sesiones", nuevo: 74900, viejo: 74900, tipo: 'frac_num' },
 
         // ESPECIALES (sin descuento por combinación)
         ultimatum: { name: "Pack ultimatum: 1 zona hifu + 1 zona lipoláser dúo 8s + vibración", nuevo: 29900, viejo: 29900, tipo: 'especial' },
@@ -166,7 +165,7 @@
             { id: 'sec-corp', filter: 'corp_num', type: 'number' },
             { id: 'sec-varios', filter: 'varios', type: 'checkbox' },
             { id: 'sec-depi', filter: 'depi', type: 'number' },
-            { id: 'sec-fraccionada', filter: 'frac', type: 'checkbox' },
+            { id: 'sec-fraccionada', filter: 'frac_num', type: 'number' },
             { id: 'sec-especiales', filter: 'especial', type: 'checkbox' }
         ];
 
@@ -193,7 +192,7 @@
                         <span>${item.name}</span>
                         <div>
                             <span class="price-tag" id="p-${key}"></span>
-                            <input type="number" data-id="${key}" min="0" max="4" value="0" onchange="calcular()">
+                            <input type="number" data-id="${key}" min="0" max="10" value="0" onchange="calcular()">
                         </div>
                     `;
                 }
@@ -268,11 +267,7 @@
                 subtotalGeneral += precio;
 
                 if (elegible) {
-                    itemsElegibles.push({
-                        key,
-                        nombre: config.name,
-                        precio
-                    });
+                    itemsElegibles.push({ key, nombre: config.name, precio });
                 }
             }
 
@@ -285,11 +280,7 @@
                         subtotalGeneral += precio;
 
                         if (elegible) {
-                            itemsElegibles.push({
-                                key,
-                                nombre: config.name,
-                                precio
-                            });
+                            itemsElegibles.push({ key, nombre: config.name, precio });
                         }
                     }
                 }
@@ -297,23 +288,22 @@
         }
 
         let descuentoTotal = 0;
-let porcentajeAplicado = 0;
-let tratamientoConDescuento = "";
+        let porcentajeAplicado = 0;
+        let tratamientoConDescuento = "";
 
-const cantidadElegibles = itemsElegibles.length;
-const porcentaje = obtenerPorcentajeSegunCantidad(cantidadElegibles);
+        const cantidadElegibles = itemsElegibles.length;
+        const porcentaje = obtenerPorcentajeSegunCantidad(cantidadElegibles);
 
-if (porcentaje > 0) {
-    // SOLO un descuento: sobre el tratamiento elegible de menor valor
-    itemsElegibles.sort((a, b) => a.precio - b.precio);
-    const itemConDescuento = itemsElegibles[0];
+        if (porcentaje > 0) {
+            itemsElegibles.sort((a, b) => a.precio - b.precio);
+            const itemConDescuento = itemsElegibles[0];
 
-    descuentoTotal = itemConDescuento.precio * (porcentaje / 100);
-    porcentajeAplicado = porcentaje;
-    tratamientoConDescuento = itemConDescuento.nombre;
+            descuentoTotal = itemConDescuento.precio * (porcentaje / 100);
+            porcentajeAplicado = porcentaje;
+            tratamientoConDescuento = itemConDescuento.nombre;
 
-    resumen[itemConDescuento.key].descuento += descuentoTotal;
-}
+            resumen[itemConDescuento.key].descuento += descuentoTotal;
+        }
 
         const total = subtotalGeneral - descuentoTotal;
         const resDiv = document.getElementById('resultado');
@@ -324,8 +314,8 @@ if (porcentaje > 0) {
         Object.values(resumen).forEach(item => {
             const qtyTxt = item.qty > 1 ? ` x${item.qty}` : '';
             const dctoTxt = item.descuento > 0
-    ? ` <small style="color:green">(-$${Math.round(item.descuento).toLocaleString()} | ${porcentajeAplicado}% off)</small>`
-    : '';
+                ? ` <small style="color:green">(-$${Math.round(item.descuento).toLocaleString()} | ${porcentajeAplicado}% off)</small>`
+                : '';
             const sinDctoTxt = !item.elegibleDescuento
                 ? ` <small style="color:#8d6e63;font-style:italic;">(sin descuento por combinación)</small>`
                 : '';
@@ -339,21 +329,20 @@ if (porcentaje > 0) {
             `;
         });
 
-       if (descuentoTotal > 0) {
-    resDiv.innerHTML += `
-        <li style="color:green;">
-            Descuento total combinación: -$${Math.round(descuentoTotal).toLocaleString()}
-        </li>
-    `;
-    
-    resDiv.innerHTML += `
-        <p style="color:green; margin-top:10px;">
-            <b>Regla aplicada:</b> ${cantidadElegibles} tratamientos elegibles = ${porcentajeAplicado}% off sobre el menor valor
-            <br>
-            <b>Tratamiento con descuento:</b> ${tratamientoConDescuento}
-        </p>
-    `;
-}
+        if (descuentoTotal > 0) {
+            resDiv.innerHTML += `
+                <li style="color:green;">
+                    Descuento total combinación: -$${Math.round(descuentoTotal).toLocaleString()}
+                </li>
+            `;
+            resDiv.innerHTML += `
+                <p style="color:green; margin-top:10px;">
+                    <b>Regla aplicada:</b> ${cantidadElegibles} tratamientos elegibles = ${porcentajeAplicado}% off sobre el menor valor
+                    <br>
+                    <b>Tratamiento con descuento:</b> ${tratamientoConDescuento}
+                </p>
+            `;
+        }
 
         resDiv.innerHTML += `</ul><hr><h2 style="margin:0;">TOTAL: $${Math.round(total).toLocaleString()}</h2>`;
         resDiv.innerHTML += `<p><b>12 cuotas de: $${Math.round(total / 12).toLocaleString()}</b></p>`;
@@ -384,3 +373,5 @@ if (porcentaje > 0) {
 
     renderizarOpciones();
 </script>
+</body>
+</html>
