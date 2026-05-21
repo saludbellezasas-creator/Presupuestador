@@ -16,18 +16,45 @@
         .item-row:hover { background: #fdf8f0; }
         .price-tag { font-weight: bold; color: var(--primary); margin-left: auto; margin-right: 10px; white-space: nowrap; }
         input[type="number"] { width: 50px; padding: 5px; border-radius: 5px; border: 1px solid #ccc; text-align: center; }
-        .footer-nav { position: fixed; bottom: 0; left: 0; right: 0; background: white; padding: 15px; border-top: 2px solid var(--primary); display: flex; gap: 10px; justify-content: center; z-index: 1000; }
+        .footer-nav { position: fixed; bottom: 0; left: 0; right: 0; background: white; padding: 15px; border-top: 2px solid var(--primary); display: flex; gap: 10px; justify-content: center; z-index: 1000; flex-wrap: wrap; }
         button { padding: 12px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
         .btn-calc { background: var(--primary); color: white; }
         .btn-ws { background: #25d366; color: white; display: none; }
         .nota { font-size: 0.9em; color: #666; margin-top: -8px; margin-bottom: 10px; text-align: center; }
         .sin-dcto { font-size: 0.8em; color: #8d6e63; font-style: italic; }
+
+        /* Promo Aguinaldo */
+        .promo-banner { background: linear-gradient(135deg, #ff9800, #f44336); color: white; padding: 15px; border-radius: 10px; margin-bottom: 20px; text-align: center; position: relative; overflow: hidden; }
+        .promo-banner h3 { margin: 0 0 5px; font-size: 1.3em; }
+        .promo-banner p { margin: 0 0 10px; font-size: 0.9em; opacity: 0.9; }
+        .promo-toggle { display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .switch { position: relative; width: 52px; height: 28px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.3); border-radius: 28px; transition: 0.3s; }
+        .slider:before { content: ""; position: absolute; height: 22px; width: 22px; left: 3px; bottom: 3px; background: white; border-radius: 50%; transition: 0.3s; }
+        .switch input:checked + .slider { background: rgba(255,255,255,0.7); }
+        .switch input:checked + .slider:before { transform: translateX(24px); }
+        .promo-expired { background: #ccc; color: #666; }
+        .ahorro-lista { color: #e65100; font-weight: bold; font-size: 0.95em; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <h1>Espacio HIFU</h1>
+
+    <!-- PROMO AGUINALDO -->
+    <div class="promo-banner" id="promoBanner">
+        <h3>🎁 PROMO AGUINALDO</h3>
+        <p>10% OFF adicional en todos los tratamientos </p>
+        <div class="promo-toggle">
+            <span>Activar promo</span>
+            <label class="switch">
+                <input type="checkbox" id="promoAguinaldo" onchange="calcular()">
+                <span class="slider"></span>
+            </label>
+        </div>
+    </div>
 
     <div class="verificador">
         <label>🔍 Buscar Cliente:</label>
@@ -92,13 +119,31 @@
     let nombreCliente = "Cliente";
     let mensajeWS = "";
 
+    // Verificar si la promo sigue vigente (hasta 31 julio 2026)
+    const PROMO_FIN = new Date('2026-07-31T23:59:59');
+    function promoVigente() {
+        return new Date() <= PROMO_FIN;
+    }
+
+    (function initPromo() {
+        const banner = document.getElementById('promoBanner');
+        if (!promoVigente()) {
+            banner.classList.add('promo-expired');
+            banner.innerHTML = '<h3>🎁 PROMO AGUINALDO</h3><p>Esta promoción ha finalizado.</p>';
+            const chk = document.getElementById('promoAguinaldo');
+            if (chk) { chk.checked = false; chk.disabled = true; }
+        }
+    })();
+
+    function promoActiva() {
+        const chk = document.getElementById('promoAguinaldo');
+        return chk && chk.checked && promoVigente();
+    }
+
     const PRECIOS = {
-        // PAI (sin descuento por combinación)
         pai_esencial: { name: "PAI Esencial", nuevo: 59900, viejo: 49900, tipo: 'pack_fijo' },
         pai_avanzado: { name: "PAI Avanzado", nuevo: 79900, viejo: 79900, tipo: 'pack_fijo' },
         pai_superior: { name: "PAI Superior", nuevo: 99900, viejo: 99900, tipo: 'pack_fijo' },
-        
-        // HIFU
         hifu_zona: { name: "HIFU 1 Zona", nuevo: 15900, viejo: 15900, tipo: 'hifu' },
         hifu_2_zonas: { name: "HIFU 2 Zonas", nuevo: 28620, viejo: 28620, tipo: 'hifu' },
         hifu_papada: { name: "HIFU Papada", nuevo: 5900, viejo: 5900, tipo: 'hifu' },
@@ -108,8 +153,6 @@
         hifu_cuerpo: { name: "HIFU Cuerpo Completo (8z)", nuevo: 71900, viejo: 71900, tipo: 'hifu' },
         hifu_5_zonas: { name: "Combo HIFU 5 Zonas", nuevo: 52375, viejo: 52375, tipo: 'hifu' },
         hifu_6_zonas: { name: "Combo HIFU 6 Zonas", nuevo: 62850, viejo: 62850, tipo: 'hifu' },
-
-        // CORPORALES
         body: { name: "BodySculpt (x8)", nuevo: 16500, viejo: 9900, tipo: 'corp_num' },
         exilis: { name: "Exilis (x4)", nuevo: 18900, viejo: 12900, tipo: 'corp_num' },
         exilispapada: { name: "Exilis papada (x4)", nuevo: 9500, viejo: 9500, tipo: 'corp_num' },
@@ -117,13 +160,9 @@
         lipolaser: { name: "Lipolaser dúo (x8)", nuevo: 18900, viejo: 15900, tipo: 'corp_num' },
         preso: { name: "Presoterapia (x6)", nuevo: 9900, viejo: 9900, tipo: 'corp_num' },
         limpieza: { name: "Limpieza Facial", nuevo: 2750, viejo: 2750, tipo: 'corp_num' },
-
-        // VARIOS
         ultracavitacion: { name: "Ultracavitación (x8)", nuevo: 19900, viejo: 12900, tipo: 'varios' },
         vaccum: { name: "Vaccumterapia (x8)", nuevo: 16900, viejo: 12900, tipo: 'varios' },
         velashape: { name: "Velashape (x8)", nuevo: 16900, viejo: 12900, tipo: 'varios' },
-
-        // DEPI
         depi_combo1: { name: "2 Zonas chicas + 1 Mediana (x6)", nuevo: 16900, viejo: 16900, tipo: 'depi' },
         depi_combo2: { name: "4 Zonas chicas (x6)", nuevo: 16900, viejo: 16900, tipo: 'depi' },
         depi_combo3: { name: "1 Gde + 1 Med + 2 Chicas (x6)", nuevo: 29900, viejo: 29900, tipo: 'depi' },
@@ -131,20 +170,21 @@
         depi_mediana: { name: "Depi Zona Mediana x6", nuevo: 11900, viejo: 8900, tipo: 'depi' },
         depi_chica: { name: "Depi Zona Chica x6", nuevo: 9900, viejo: 4900, tipo: 'depi' },
         laser_facial_x6: { name: "Láser Facial x6", nuevo: 17900, viejo: 12900, tipo: 'depi' },
-
-        // FRACCIONADA — ahora tipo 'frac_num' para manejarlos con input number
         frac_1z1s: { name: "Fraccionada: 1 zona 1 sesión", nuevo: 11900, viejo: 11900, tipo: 'frac_num' },
         frac_1z3s: { name: "Fraccionada: 1 zona 3 sesiones", nuevo: 29900, viejo: 29900, tipo: 'frac_num' },
         frac_3z1s: { name: "Fraccionada: 3 zonas 1 sesión", nuevo: 26900, viejo: 26900, tipo: 'frac_num' },
         frac_3z3s: { name: "Fraccionada: 3 zonas 3 sesiones", nuevo: 74900, viejo: 74900, tipo: 'frac_num' },
-
-        // ESPECIALES (sin descuento por combinación)
         ultimatum: { name: "Pack ultimatum: 1 zona hifu + 1 zona lipoláser dúo 8s + vibración", nuevo: 29900, viejo: 29900, tipo: 'especial' },
         lifting: { name: "Pack lifting facial premium: 4 sesiones exilis + 1 hifu facial", nuevo: 26900, viejo: 26900, tipo: 'especial' }
     };
 
     function getPrecio(config) {
         return esViejo ? config.viejo : config.nuevo;
+    }
+
+    // Precio de lista = siempre el de "nuevo" (sin descuento cliente antiguo ni nada)
+    function getPrecioLista(config) {
+        return config.nuevo;
     }
 
     function esElegibleParaDescuento(tipo) {
@@ -234,26 +274,31 @@
         }
     }
 
-    function registrarItem(resumen, key, nombre, precio, elegibleDescuento) {
+    function registrarItem(resumen, key, nombre, precio, precioLista, elegibleDescuento) {
         if (!resumen[key]) {
             resumen[key] = {
                 key,
                 nombre,
                 qty: 0,
                 subtotal: 0,
+                subtotalLista: 0,
                 descuento: 0,
+                descuentoPromo: 0,
                 elegibleDescuento
             };
         }
 
         resumen[key].qty += 1;
         resumen[key].subtotal += precio;
+        resumen[key].subtotalLista += precioLista;
     }
 
     function calcular() {
         let subtotalGeneral = 0;
+        let subtotalListaGeneral = 0;
         let resumen = {};
         let itemsElegibles = [];
+        const promo = promoActiva();
 
         for (let key in PRECIOS) {
             const config = PRECIOS[key];
@@ -261,11 +306,13 @@
             if (!input) continue;
 
             const precio = getPrecio(config);
+            const precioLista = getPrecioLista(config);
             const elegible = esElegibleParaDescuento(config.tipo);
 
             if (input.type === 'checkbox' && input.checked) {
-                registrarItem(resumen, key, config.name, precio, elegible);
+                registrarItem(resumen, key, config.name, precio, precioLista, elegible);
                 subtotalGeneral += precio;
+                subtotalListaGeneral += precioLista;
 
                 if (elegible) {
                     itemsElegibles.push({ key, nombre: config.name, precio });
@@ -277,8 +324,9 @@
 
                 if (cantidad > 0) {
                     for (let i = 0; i < cantidad; i++) {
-                        registrarItem(resumen, key, config.name, precio, elegible);
+                        registrarItem(resumen, key, config.name, precio, precioLista, elegible);
                         subtotalGeneral += precio;
+                        subtotalListaGeneral += precioLista;
 
                         if (elegible) {
                             itemsElegibles.push({ key, nombre: config.name, precio });
@@ -288,7 +336,8 @@
             }
         }
 
-        let descuentoTotal = 0;
+        // Descuento por combinación
+        let descuentoCombo = 0;
         let porcentajeAplicado = 0;
         let tratamientoConDescuento = "";
 
@@ -299,24 +348,50 @@
             itemsElegibles.sort((a, b) => a.precio - b.precio);
             const itemConDescuento = itemsElegibles[0];
 
-            descuentoTotal = itemConDescuento.precio * (porcentaje / 100);
+            descuentoCombo = itemConDescuento.precio * (porcentaje / 100);
             porcentajeAplicado = porcentaje;
             tratamientoConDescuento = itemConDescuento.nombre;
 
-            resumen[itemConDescuento.key].descuento += descuentoTotal;
+            resumen[itemConDescuento.key].descuento += descuentoCombo;
         }
 
-        const total = subtotalGeneral - descuentoTotal;
-        const resDiv = document.getElementById('resultado');
+        const subtotalDespuesCombo = subtotalGeneral - descuentoCombo;
 
+        // Promo Aguinaldo: 10% adicional sobre cada tratamiento (después de combo)
+        let descuentoPromoTotal = 0;
+        if (promo) {
+            Object.values(resumen).forEach(item => {
+                const baseItem = item.subtotal - item.descuento;
+                const promoDesc = baseItem * 0.10;
+                item.descuentoPromo = promoDesc;
+                descuentoPromoTotal += promoDesc;
+            });
+        }
+
+        const total = subtotalDespuesCombo - descuentoPromoTotal;
+        const ahorroVsLista = subtotalListaGeneral - total;
+
+        const resDiv = document.getElementById('resultado');
         resDiv.style.display = "block";
-        resDiv.innerHTML = `<h3>Resumen: ${nombreCliente}</h3><ul>`;
+        resDiv.innerHTML = `<h3>Resumen: ${nombreCliente}</h3>`;
+
+        if (promo) {
+            resDiv.innerHTML += `<p style="background:#fff3e0; padding:8px; border-radius:6px; text-align:center;">🎁 <b>PROMO AGUINALDO ACTIVA</b> — 10% OFF adicional aplicado</p>`;
+        }
+
+        resDiv.innerHTML += `<ul>`;
 
         Object.values(resumen).forEach(item => {
             const qtyTxt = item.qty > 1 ? ` x${item.qty}` : '';
-            const dctoTxt = item.descuento > 0
-                ? ` <small style="color:green">(-$${Math.round(item.descuento).toLocaleString()} | ${porcentajeAplicado}% off)</small>`
+
+            const dctoComboTxt = item.descuento > 0
+                ? ` <small style="color:green">(-$${Math.round(item.descuento).toLocaleString()} | ${porcentajeAplicado}% combo)</small>`
                 : '';
+
+            const dctoPromoTxt = (promo && item.descuentoPromo > 0)
+                ? ` <small style="color:#e65100">(-$${Math.round(item.descuentoPromo).toLocaleString()} | 10% aguinaldo)</small>`
+                : '';
+
             const sinDctoTxt = !item.elegibleDescuento
                 ? ` <small style="color:#8d6e63;font-style:italic;">(sin descuento por combinación)</small>`
                 : '';
@@ -324,16 +399,17 @@
             resDiv.innerHTML += `
                 <li>
                     ${item.nombre}${qtyTxt}: $${Math.round(item.subtotal).toLocaleString()}
-                    ${dctoTxt}
+                    ${dctoComboTxt}
+                    ${dctoPromoTxt}
                     ${sinDctoTxt}
                 </li>
             `;
         });
 
-        if (descuentoTotal > 0) {
+        if (descuentoCombo > 0) {
             resDiv.innerHTML += `
                 <li style="color:green;">
-                    Descuento total combinación: -$${Math.round(descuentoTotal).toLocaleString()}
+                    Descuento combinación: -$${Math.round(descuentoCombo).toLocaleString()}
                 </li>
             `;
             resDiv.innerHTML += `
@@ -345,23 +421,48 @@
             `;
         }
 
+        if (promo && descuentoPromoTotal > 0) {
+            resDiv.innerHTML += `
+                <li style="color:#e65100;">
+                    🎁 Descuento Aguinaldo (10%): -$${Math.round(descuentoPromoTotal).toLocaleString()}
+                </li>
+            `;
+        }
+
         resDiv.innerHTML += `</ul><hr><h2 style="margin:0;">TOTAL: $${Math.round(total).toLocaleString()}</h2>`;
         resDiv.innerHTML += `<p><b>12 cuotas de: $${Math.round(total / 12).toLocaleString()}</b></p>`;
 
+        // Ahorro vs precio de lista
+        if (ahorroVsLista > 0) {
+            const pctAhorro = ((ahorroVsLista / subtotalListaGeneral) * 100).toFixed(1);
+            resDiv.innerHTML += `
+                <p class="ahorro-lista" style="background:#fbe9e7; padding:10px; border-radius:8px; text-align:center; margin-top:10px;">
+                    💰 Ahorro total vs precio de lista: <b>-$${Math.round(ahorroVsLista).toLocaleString()}</b> (${pctAhorro}% menos)
+                    <br><small>Precio de lista: $${Math.round(subtotalListaGeneral).toLocaleString()} → Pagás: $${Math.round(total).toLocaleString()}</small>
+                </p>
+            `;
+        }
+
+        // WhatsApp message
         const detalleWS = Object.values(resumen).map(item => {
             const qtyTxt = item.qty > 1 ? ` x${item.qty}` : '';
             const descTxt = item.descuento > 0
-                ? ` (desc. -$${Math.round(item.descuento).toLocaleString()})`
+                ? ` (desc. combo -$${Math.round(item.descuento).toLocaleString()})`
                 : '';
-            return `- ${item.nombre}${qtyTxt}: $${Math.round(item.subtotal).toLocaleString()}${descTxt}`;
+            const promoTxt = (promo && item.descuentoPromo > 0)
+                ? ` (desc. aguinaldo -$${Math.round(item.descuentoPromo).toLocaleString()})`
+                : '';
+            return `- ${item.nombre}${qtyTxt}: $${Math.round(item.subtotal).toLocaleString()}${descTxt}${promoTxt}`;
         }).join('%0A');
 
         mensajeWS =
             `Hola ${nombreCliente}! Soy de Espacio HIFU. Presupuesto:%0A%0A` +
             detalleWS +
-            (descuentoTotal > 0 ? `%0A- Descuento total combinación: -$${Math.round(descuentoTotal).toLocaleString()}` : '') +
+            (descuentoCombo > 0 ? `%0A- Descuento combinación: -$${Math.round(descuentoCombo).toLocaleString()}` : '') +
+            (promo && descuentoPromoTotal > 0 ? `%0A- 🎁 Descuento Aguinaldo (10%): -$${Math.round(descuentoPromoTotal).toLocaleString()}` : '') +
             `%0A%0A*TOTAL: $${Math.round(total).toLocaleString()}*` +
-            `%0AO 12 cuotas de $${Math.round(total / 12).toLocaleString()}`;
+            `%0AO 12 cuotas de $${Math.round(total / 12).toLocaleString()}` +
+            (ahorroVsLista > 0 ? `%0A%0A💰 Ahorro vs precio de lista: -$${Math.round(ahorroVsLista).toLocaleString()}` : '');
 
         document.getElementById('btnWs').style.display = Object.keys(resumen).length ? "block" : "none";
     }
