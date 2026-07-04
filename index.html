@@ -22,19 +22,6 @@
         .btn-ws { background: #25d366; color: white; display: none; }
         .nota { font-size: 0.9em; color: #666; margin-top: -8px; margin-bottom: 10px; text-align: center; }
         .sin-dcto { font-size: 0.8em; color: #8d6e63; font-style: italic; }
-
-        /* Promo Aguinaldo */
-        .promo-banner { background: linear-gradient(135deg, #ff9800, #f44336); color: white; padding: 15px; border-radius: 10px; margin-bottom: 20px; text-align: center; position: relative; overflow: hidden; }
-        .promo-banner h3 { margin: 0 0 5px; font-size: 1.3em; }
-        .promo-banner p { margin: 0 0 10px; font-size: 0.9em; opacity: 0.9; }
-        .promo-toggle { display: flex; align-items: center; justify-content: center; gap: 10px; }
-        .switch { position: relative; width: 52px; height: 28px; }
-        .switch input { opacity: 0; width: 0; height: 0; }
-        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.3); border-radius: 28px; transition: 0.3s; }
-        .slider:before { content: ""; position: absolute; height: 22px; width: 22px; left: 3px; bottom: 3px; background: white; border-radius: 50%; transition: 0.3s; }
-        .switch input:checked + .slider { background: rgba(255,255,255,0.7); }
-        .switch input:checked + .slider:before { transform: translateX(24px); }
-        .promo-expired { background: #ccc; color: #666; }
         .ahorro-lista { color: #e65100; font-weight: bold; font-size: 0.95em; }
     </style>
 </head>
@@ -42,20 +29,6 @@
 
 <div class="container">
     <h1>Espacio HIFU</h1>
-
-    <!-- PROMO AGUINALDO -->
-    <div class="promo-banner" id="promoBanner">
-        <h3>🎁 PROMO AGUINALDO</h3>
-        <p>10% OFF adicional en todos los tratamientos </p>
-        <div class="promo-toggle">
-            <span>Activar promo</span>
-            <label class="switch">
-                <input type="checkbox" id="promoAguinaldo" onchange="calcular()">
-                <span class="slider"></span>
-            </label>
-        </div>
-    </div>
-
     <div class="verificador">
         <label>🔍 Buscar Cliente:</label>
         <div style="display:flex; gap:10px; margin-top:5px;">
@@ -118,28 +91,6 @@
     let esViejo = false;
     let nombreCliente = "Cliente";
     let mensajeWS = "";
-
-    // Verificar si la promo sigue vigente (hasta 31 julio 2026)
-    const PROMO_FIN = new Date('2026-07-31T23:59:59');
-    function promoVigente() {
-        return new Date() <= PROMO_FIN;
-    }
-
-    (function initPromo() {
-        const banner = document.getElementById('promoBanner');
-        if (!promoVigente()) {
-            banner.classList.add('promo-expired');
-            banner.innerHTML = '<h3>🎁 PROMO AGUINALDO</h3><p>Esta promoción ha finalizado.</p>';
-            const chk = document.getElementById('promoAguinaldo');
-            if (chk) { chk.checked = false; chk.disabled = true; }
-        }
-    })();
-
-    function promoActiva() {
-        const chk = document.getElementById('promoAguinaldo');
-        return chk && chk.checked && promoVigente();
-    }
-
     const PRECIOS = {
         pai_esencial: { name: "PAI Esencial", nuevo: 59900, viejo: 49900, tipo: 'pack_fijo' },
         pai_avanzado: { name: "PAI Avanzado", nuevo: 79900, viejo: 79900, tipo: 'pack_fijo' },
@@ -283,7 +234,6 @@
                 subtotal: 0,
                 subtotalLista: 0,
                 descuento: 0,
-                descuentoPromo: 0,
                 elegibleDescuento
             };
         }
@@ -298,7 +248,6 @@
         let subtotalListaGeneral = 0;
         let resumen = {};
         let itemsElegibles = [];
-        const promo = promoActiva();
 
         for (let key in PRECIOS) {
             const config = PRECIOS[key];
@@ -354,30 +303,12 @@
 
             resumen[itemConDescuento.key].descuento += descuentoCombo;
         }
-
-        const subtotalDespuesCombo = subtotalGeneral - descuentoCombo;
-
-        // Promo Aguinaldo: 10% adicional sobre cada tratamiento (después de combo)
-        let descuentoPromoTotal = 0;
-        if (promo) {
-            Object.values(resumen).forEach(item => {
-                const baseItem = item.subtotal - item.descuento;
-                const promoDesc = baseItem * 0.10;
-                item.descuentoPromo = promoDesc;
-                descuentoPromoTotal += promoDesc;
-            });
-        }
-
-        const total = subtotalDespuesCombo - descuentoPromoTotal;
+        const total = subtotalGeneral - descuentoCombo;
         const ahorroVsLista = subtotalListaGeneral - total;
 
         const resDiv = document.getElementById('resultado');
         resDiv.style.display = "block";
         resDiv.innerHTML = `<h3>Resumen: ${nombreCliente}</h3>`;
-
-        if (promo) {
-            resDiv.innerHTML += `<p style="background:#fff3e0; padding:8px; border-radius:6px; text-align:center;">🎁 <b>PROMO AGUINALDO ACTIVA</b> — 10% OFF adicional aplicado</p>`;
-        }
 
         resDiv.innerHTML += `<ul>`;
 
@@ -388,10 +319,6 @@
                 ? ` <small style="color:green">(-$${Math.round(item.descuento).toLocaleString()} | ${porcentajeAplicado}% combo)</small>`
                 : '';
 
-            const dctoPromoTxt = (promo && item.descuentoPromo > 0)
-                ? ` <small style="color:#e65100">(-$${Math.round(item.descuentoPromo).toLocaleString()} | 10% aguinaldo)</small>`
-                : '';
-
             const sinDctoTxt = !item.elegibleDescuento
                 ? ` <small style="color:#8d6e63;font-style:italic;">(sin descuento por combinación)</small>`
                 : '';
@@ -400,7 +327,6 @@
                 <li>
                     ${item.nombre}${qtyTxt}: $${Math.round(item.subtotal).toLocaleString()}
                     ${dctoComboTxt}
-                    ${dctoPromoTxt}
                     ${sinDctoTxt}
                 </li>
             `;
@@ -418,14 +344,6 @@
                     <br>
                     <b>Tratamiento con descuento:</b> ${tratamientoConDescuento}
                 </p>
-            `;
-        }
-
-        if (promo && descuentoPromoTotal > 0) {
-            resDiv.innerHTML += `
-                <li style="color:#e65100;">
-                    🎁 Descuento Aguinaldo (10%): -$${Math.round(descuentoPromoTotal).toLocaleString()}
-                </li>
             `;
         }
 
@@ -449,17 +367,13 @@
             const descTxt = item.descuento > 0
                 ? ` (desc. combo -$${Math.round(item.descuento).toLocaleString()})`
                 : '';
-            const promoTxt = (promo && item.descuentoPromo > 0)
-                ? ` (desc. aguinaldo -$${Math.round(item.descuentoPromo).toLocaleString()})`
-                : '';
-            return `- ${item.nombre}${qtyTxt}: $${Math.round(item.subtotal).toLocaleString()}${descTxt}${promoTxt}`;
+            return `- ${item.nombre}${qtyTxt}: $${Math.round(item.subtotal).toLocaleString()}${descTxt}`;
         }).join('%0A');
 
         mensajeWS =
             `Hola ${nombreCliente}! Soy de Espacio HIFU. Presupuesto:%0A%0A` +
             detalleWS +
             (descuentoCombo > 0 ? `%0A- Descuento combinación: -$${Math.round(descuentoCombo).toLocaleString()}` : '') +
-            (promo && descuentoPromoTotal > 0 ? `%0A- 🎁 Descuento Aguinaldo (10%): -$${Math.round(descuentoPromoTotal).toLocaleString()}` : '') +
             `%0A%0A*TOTAL: $${Math.round(total).toLocaleString()}*` +
             `%0AO 12 cuotas de $${Math.round(total / 12).toLocaleString()}` +
             (ahorroVsLista > 0 ? `%0A%0A💰 Ahorro vs precio de lista: -$${Math.round(ahorroVsLista).toLocaleString()}` : '');
