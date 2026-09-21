@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -23,6 +24,9 @@
         .nota { font-size: 0.9em; color: #666; margin-top: -8px; margin-bottom: 10px; text-align: center; }
         .sin-dcto { font-size: 0.8em; color: #8d6e63; font-style: italic; }
         .ahorro-lista { color: #e65100; font-weight: bold; font-size: 0.95em; }
+        .item-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+        .promo-note { font-size: 0.78em; color: #8d6e63; font-style: italic; line-height: 1.2; }
+        .price-original { display: block; font-size: 0.78em; color: #8d6e63; font-weight: 400; text-decoration: line-through; text-align: right; }
     </style>
 </head>
 <body>
@@ -70,6 +74,11 @@
             <h2>RF Fraccionada</h2>
             <p class="nota">Selecciona cantidad de packs</p>
             <div class="grid" id="sec-fraccionada"></div>
+        </section>
+
+        <section>
+            <h2>DaySPA</h2>
+            <div class="grid" id="sec-dayspa"></div>
         </section>
 
         <section>
@@ -125,17 +134,38 @@
         frac_1z3s: { name: "Fraccionada: 1 zona 3 sesiones", nuevo: 29900, viejo: 29900, tipo: 'frac_num' },
         frac_3z1s: { name: "Fraccionada: 3 zonas 1 sesión", nuevo: 26900, viejo: 26900, tipo: 'frac_num' },
         frac_3z3s: { name: "Fraccionada: 3 zonas 3 sesiones", nuevo: 74900, viejo: 74900, tipo: 'frac_num' },
+        dayspa_relax_1: { name: "DaySPA Relax 1 persona", nuevo: 7900, viejo: 7900, tipo: 'dayspa', promoTemporal: { descuento: 1200, hasta: '2026-10-10', texto: 'Promo -$1.200 hasta el 10 de octubre' } },
+        dayspa_relax_2: { name: "DaySPA Relax 2 personas", nuevo: 13900, viejo: 13900, tipo: 'dayspa', promoTemporal: { descuento: 1200, hasta: '2026-10-10', texto: 'Promo -$1.200 hasta el 10 de octubre' } },
+        dayspa_vitalite_1: { name: "DaySPA Vitalité 1 persona", nuevo: 9990, viejo: 9990, tipo: 'dayspa', promoTemporal: { descuento: 1200, hasta: '2026-10-10', texto: 'Promo -$1.200 hasta el 10 de octubre' } },
+        dayspa_vitalite_2: { name: "DaySPA Vitalité 2 personas", nuevo: 15900, viejo: 15900, tipo: 'dayspa', promoTemporal: { descuento: 1200, hasta: '2026-10-10', texto: 'Promo -$1.200 hasta el 10 de octubre' } },
         ultimatum: { name: "Pack ultimatum: 1 zona hifu + 1 zona lipoláser dúo 8s + vibración", nuevo: 29900, viejo: 29900, tipo: 'especial' },
         lifting: { name: "Pack lifting facial premium: 4 sesiones exilis + 1 hifu facial", nuevo: 26900, viejo: 26900, tipo: 'especial' }
     };
 
     function getPrecio(config) {
-        return esViejo ? config.viejo : config.nuevo;
+        const precioBase = esViejo ? config.viejo : config.nuevo;
+        if (promoTemporalActiva(config)) {
+            return Math.max(0, precioBase - config.promoTemporal.descuento);
+        }
+        return precioBase;
     }
 
     // Precio de lista = siempre el de "nuevo" (sin descuento cliente antiguo ni nada)
     function getPrecioLista(config) {
         return config.nuevo;
+    }
+
+    function promoTemporalActiva(config) {
+        if (!config.promoTemporal || !config.promoTemporal.hasta) return false;
+
+        const [anio, mes, dia] = config.promoTemporal.hasta.split('-').map(Number);
+        const finPromo = new Date(anio, mes - 1, dia, 23, 59, 59, 999);
+
+        return new Date() <= finPromo;
+    }
+
+    function getNotaPromo(config) {
+        return promoTemporalActiva(config) ? config.promoTemporal.texto : '';
     }
 
     function esElegibleParaDescuento(tipo) {
@@ -158,6 +188,7 @@
             { id: 'sec-varios', filter: 'varios', type: 'checkbox' },
             { id: 'sec-depi', filter: 'depi', type: 'number' },
             { id: 'sec-fraccionada', filter: 'frac_num', type: 'number' },
+            { id: 'sec-dayspa', filter: 'dayspa', type: 'checkbox' },
             { id: 'sec-especiales', filter: 'especial', type: 'checkbox' }
         ];
 
@@ -174,14 +205,18 @@
 
                 if (spec.type === 'checkbox') {
                     div.innerHTML = `
-                        <label>
-                            <input type="checkbox" data-id="${key}" onchange="calcular()"> ${item.name}
+                        <label class="item-info">
+                            <span><input type="checkbox" data-id="${key}" onchange="calcular()"> ${item.name}</span>
+                            <small class="promo-note" id="promo-${key}"></small>
                         </label>
                         <span class="price-tag" id="p-${key}"></span>
                     `;
                 } else {
                     div.innerHTML = `
-                        <span>${item.name}</span>
+                        <span class="item-info">
+                            <span>${item.name}</span>
+                            <small class="promo-note" id="promo-${key}"></small>
+                        </span>
                         <div>
                             <span class="price-tag" id="p-${key}"></span>
                             <input type="number" data-id="${key}" min="0" max="10" value="0" onchange="calcular()">
@@ -200,7 +235,18 @@
         for (let key in PRECIOS) {
             const tag = document.getElementById(`p-${key}`);
             if (tag) {
-                tag.innerText = `$${Math.round(getPrecio(PRECIOS[key])).toLocaleString()}`;
+                const config = PRECIOS[key];
+                const precioActual = Math.round(getPrecio(config)).toLocaleString();
+                const precioLista = Math.round(getPrecioLista(config)).toLocaleString();
+
+                tag.innerHTML = promoTemporalActiva(config)
+                    ? `$${precioActual}<span class="price-original">$${precioLista}</span>`
+                    : `$${precioActual}`;
+            }
+
+            const promo = document.getElementById(`promo-${key}`);
+            if (promo) {
+                promo.innerText = getNotaPromo(PRECIOS[key]);
             }
         }
     }
@@ -244,6 +290,8 @@
     }
 
     function calcular() {
+        actualizarPreciosUI();
+
         let subtotalGeneral = 0;
         let subtotalListaGeneral = 0;
         let resumen = {};
