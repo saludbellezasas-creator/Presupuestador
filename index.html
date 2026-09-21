@@ -135,10 +135,10 @@
         frac_1z3s: { name: "Fraccionada: 1 zona 3 sesiones", nuevo: 29900, viejo: 29900, tipo: 'frac_num' },
         frac_3z1s: { name: "Fraccionada: 3 zonas 1 sesión", nuevo: 26900, viejo: 26900, tipo: 'frac_num' },
         frac_3z3s: { name: "Fraccionada: 3 zonas 3 sesiones", nuevo: 74900, viejo: 74900, tipo: 'frac_num' },
-        dayspa_relax_1: { name: "DaySPA Relax 1 persona", nuevo: 7900, viejo: 7900, tipo: 'dayspa', promoTemporal: { descuento: 1200, hasta: '2026-10-10', texto: 'Promo -$1.200 hasta el 10 de octubre' } },
-        dayspa_relax_2: { name: "DaySPA Relax 2 personas", nuevo: 13900, viejo: 13900, tipo: 'dayspa', promoTemporal: { descuento: 1200, hasta: '2026-10-10', texto: 'Promo -$1.200 hasta el 10 de octubre' } },
-        dayspa_vitalite_1: { name: "DaySPA Vitalité 1 persona", nuevo: 9990, viejo: 9990, tipo: 'dayspa', promoTemporal: { descuento: 1200, hasta: '2026-10-10', texto: 'Promo -$1.200 hasta el 10 de octubre' } },
-        dayspa_vitalite_2: { name: "DaySPA Vitalité 2 personas", nuevo: 15900, viejo: 15900, tipo: 'dayspa', promoTemporal: { descuento: 1200, hasta: '2026-10-10', texto: 'Promo -$1.200 hasta el 10 de octubre' } },
+        dayspa_relax_1: { name: "DaySPA Relax 1 persona", nuevo: 7900, viejo: 7900, tipo: 'dayspa', promoTemporal: { porcentaje: 25, hasta: '2026-10-10', texto: 'Promo 25% OFF hasta el 10 de octubre' } },
+        dayspa_relax_2: { name: "DaySPA Relax 2 personas", nuevo: 13900, viejo: 13900, tipo: 'dayspa', promoTemporal: { porcentaje: 25, hasta: '2026-10-10', texto: 'Promo 25% OFF hasta el 10 de octubre' } },
+        dayspa_vitalite_1: { name: "DaySPA Vitalité 1 persona", nuevo: 9990, viejo: 9990, tipo: 'dayspa', promoTemporal: { porcentaje: 25, hasta: '2026-10-10', texto: 'Promo 25% OFF hasta el 10 de octubre' } },
+        dayspa_vitalite_2: { name: "DaySPA Vitalité 2 personas", nuevo: 15900, viejo: 15900, tipo: 'dayspa', promoTemporal: { porcentaje: 25, hasta: '2026-10-10', texto: 'Promo 25% OFF hasta el 10 de octubre' } },
         ultimatum: { name: "Pack ultimatum: 1 zona hifu + 1 zona lipoláser dúo 8s + vibración", nuevo: 29900, viejo: 29900, tipo: 'especial' },
         lifting: { name: "Pack lifting facial premium: 4 sesiones exilis + 1 hifu facial", nuevo: 26900, viejo: 26900, tipo: 'especial' }
     };
@@ -146,7 +146,7 @@
     function getPrecio(config) {
         const precioBase = esViejo ? config.viejo : config.nuevo;
         if (promoTemporalActiva(config)) {
-            return Math.max(0, precioBase - config.promoTemporal.descuento);
+            return Math.round(precioBase * (1 - config.promoTemporal.porcentaje / 100));
         }
         return precioBase;
     }
