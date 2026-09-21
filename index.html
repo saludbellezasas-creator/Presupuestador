@@ -78,6 +78,7 @@
 
         <section>
             <h2>DaySPA</h2>
+            <p class="nota">Los DaySPA ya incluyen su promoción y no participan en descuentos por combinación</p>
             <div class="grid" id="sec-dayspa"></div>
         </section>
 
@@ -169,7 +170,7 @@
     }
 
     function esElegibleParaDescuento(tipo) {
-        return !['pack_fijo', 'especial'].includes(tipo);
+        return !['pack_fijo', 'especial', 'dayspa'].includes(tipo);
     }
 
     function obtenerPorcentajeSegunCantidad(cantidad) {
